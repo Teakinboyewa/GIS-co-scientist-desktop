@@ -1,0 +1,170 @@
+# ---- Secrets / environment ----
+.env
+.env.*
+*.local
+secrets.json
+*.keys
+
+# ---- DataRetriever user/runtime data (may contain credentials) ----
+agents/data_agent/DataRetriever_Handbooks/Backed up handbooks/
+# Per-server runtime data written by the app (see agents/data_agent/user_data_sources.py):
+# each user's private sources, and community submissions awaiting review.
+agents/data_agent/DataRetriever_Handbooks/Handbooks_user/
+agents/data_agent/DataRetriever_Handbooks/Handbooks_pending/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---- Runtime data / generated artifacts ----
+Outputs/
+WebUI/uploads/
+generated_code/
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- IDE / editor ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+outputs/
+.cache/
+cache/
+
+# ---- Large local media / scratch (exceeds GitHub file-size limits) ----
+/VIDEOS/
+/DEL/
+
+# Python virtualenv — never commit (27k files)
+.agm_venv/
+
+# ---- Local tool / agent config & scratch ----
+.claude/settings.local.json
+.agents/
+.tmp/
+agm_venv/
+tmpclaude-*
+/_dbg_*
+/temp_*
+
+# ---- Downloaded / re-executed data (regenerable, large; includes a 170 MB tif) ----
+eval/retro/artifacts/
+worldpop_downloads/
+worldpop_downloads_abs/
+/usgs_qfaults_*
+
+# ---- Repo snapshot archives ----
+/*.zip
+
+# ---- Research / manuscript working folder (not needed by the app; Handbook Studio
+#      creates Data_retrieval_skill_project/Handbook_Studio_Sessions/ itself at runtime) ----
+Data_retrieval_skill_project/
+# Explicit so the notes stay private even if the parent rule is ever narrowed
+Data_retrieval_skill_project/MDs/
+*.ai
+Smart Water/
+
+# ---- Office temp / backup / OneDrive conflict copies ----
+~$*
+*AutoRecovered*
+*Repaired*
+*.BACKUP-*
+* copy.*
+DEL_*
+*_DEL.*
+*_del.*
+*-DESKTOP-*
+
+# ---- Conversation DB snapshots / merge sources and the merge script (local tooling) ----
+WebUI/conversation_DBs/
+
+# ---- Root-level scratch: debug payloads, experiment results, exploratory notebooks ----
+/results*.json
+/aoi_bbox.json
+/candidate_summary.json
+/search_payload.json
+/*.xlsx
+/*.ipynb
+
+# ---- Not part of the app: standalone eval tooling, the separate Smart Water UI, one-off scripts ----
+/eval/
+/WebUI_revamped/
+.claude/
+WebUI/backfill_conversation_modes.py
+WebUI/export_offline_conversation.py
+WebUI/render_conversation_html.py
+
+# ---- Superseded versions, old manuals, scratch, sample demo data ----
+*.tar.gz
+WebUI/*_v[0-9].py
+WebUI/*_v[0-9].js
+WebUI/user_manual*.html
+agents/user_manual.*
+agents/modeling_agent/model_base/curated_model_kb_v1.py
+agents/modeling_agent/test_modeling_agent.py
+agents/task_manager/solution_graph.html
+utils/rough.py
+agents/data_agent/*.gpkg
+agents/data_agent/*.csv
+agents/data_agent/USDA_ERS_Geospatial_v1.toml
+
+# React source for /home and /map-interpreter (built output in WebUI/ui/ is kept)
+WebUI/frontend/node_modules/
+
+# Benchmark run records (per-run logs; agent outputs live in Outputs/)
+benchmark/runs/
+
+# Desktop app (generated locally)
+desktop/deps/
+desktop/profile/
+desktop/logs/
+*.lnk
+build/
+dist/
+desktop/tools/
+
+# ---- Desktop repo (public): keep out of git ----
+# The shared data-source catalog is its own repo (Teakinboyewa/GIS-co-scientist-catalog).
+catalog_repo/
+# Mac build output and staging (desktop/build/build_mac.py)
+*.dmg
+build/mac_stage/
+
+# Personal notes (paths, session IDs) kept on this computer only
+README_LOCAL.md
+
+# The "build/" rule above is for build output; the build *scripts* live in
+# desktop/build/ and must be committed (the Mac workflow runs them).
+!/desktop/build/
+/desktop/build/__pycache__/

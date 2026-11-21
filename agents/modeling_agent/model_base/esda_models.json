@@ -1,0 +1,244 @@
+[
+  {
+    "page_content": "Model: G\nClass: esda.getisord.G\nType: exploratory_spatial_analysis\n\nDocumentation:\nGlobal G Autocorrelation Statistic\n\nParameters\n----------\ny             : array (n,1)\n                Attribute values\nw             : W | Graph\n               spatial weights instance as W or Graph aligned with y\npermutations  : int\n                the number of random permutations for calculating pseudo p_values\n\nAttributes\n----------\ny : array\n    original variable\nw : W\n    spatial weights instance as W or Graph aligned with y\npermutation : int\n    the number of permutations\nG : float\n    the value of statistic\nEG : float\n    the expected value of statistic\nVG : float\n    the variance of G under normality assumption\nz_norm : float\n    standard normal test statistic\np_norm : float\n    p-value under normality assumption (one-sided)\nsim : array\n    (if permutations > 0)\n    vector of G values for permutated samples\np_sim : float\n    p-value based on permutations (one-sided)\n    null: spatial randomness\n    alternative: the observed G is extreme it is either\n    extremely high or extremely low\nEG_sim : float\n    average value of G from permutations\nVG_sim : float\n    variance of G from permutations\nseG_sim : float\n    standard deviation of G under permutations.\nz_sim : float\n    standardized G based on permutations\np_z_sim : float\n    p-value based on standard normal approximation from permutations (one-sided)\n\nNotes\n-----\nMoments are based on normality assumption.\n\nFor technical details see :cite:`Getis_2010` and :cite:`Ord_2010`.\n\n\nExamples\n--------\n>>> import libpysal\n>>> import numpy\n>>> numpy.random.seed(10)\n\nPreparing a point data set\n\n>>> points = [(10, 10), (20, 10), (40, 10), (15, 20), (30, 20), (30, 30)]\n\nCreating a weights object from points\n\n>>> w = libpysal.weights.DistanceBand(points,threshold=15)\n>>> w.transform = \"B\"\n\nPreparing a variable\n\n>>> y = numpy.array([2, 3, 3.2, 5, 8, 7])\n\nApplying Getis and Ord G test\n\n>>> from esda.getisord import G\n>>> g = G(y,w)\n\nExamining the results\n\n>>> round(g.G, 3)\n0.557\n\n>>> round(g.p_norm, 3)\n0.173",
+    "metadata": {
+      "model_name": "G",
+      "full_class": "esda.getisord.G",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.getisord",
+      "doc_length": 1984
+    }
+  },
+  {
+    "page_content": "Model: G_Local\nClass: esda.getisord.G_Local\nType: exploratory_spatial_analysis\n\nDocumentation:\nGeneralized Local G Autocorrelation\n\nParameters\n----------\ny : array\n    variable\nw : W | Graph\n    spatial weights instance as W or Graph aligned with y\ntransform : {'R', 'B'}\n    the type of w, either 'B' (binary) or 'R' (row-standardized)\npermutations : int\n    the number of random permutations for calculating\n    pseudo p values\nstar : boolean or float\n    whether or not to include focal observation in sums (default: False)\n    if the row-transformed weight is provided, then this is the default\n    value to use within the spatial lag. Generally, weights should be\n    provided in binary form, and standardization/self-weighting will be\n    handled by the function itself.\nisland_weight:\n    value to use as a weight for the \"fake\" neighbor for every island.\n    If numpy.nan, will propagate to the final local statistic depending\n    on the `stat_func`. If 0, then the lag is always zero for islands.\n\nAttributes\n----------\ny : array\n   original variable\nw : W | Graph\n    spatial weights instance as W or Graph aligned with y\npermutations : int\n              the number of permutations\nGs : array\n    of floats, the value of the orginal G statistic in Getis & Ord (1992)\nEGs : float\n     expected value of Gs under normality assumption\n     the values is scalar, since the expectation is identical\n     across all observations\nVGs : array\n     of floats, variance values of Gs under normality assumption\nZs : array\n    of floats, standardized Gs\np_norm : array\n        of floats, p-value under normality assumption (one-sided)\n        for two-sided tests, this value should be multiplied by 2\nsim : array\n     of arrays of floats (if permutations>0), vector of I values\n     for permutated samples\np_sim : array\n    of floats, p-value based on permutations (one-sided)\n    null - spatial randomness\n    alternative - the observed G is extreme\n        (it is either extremely high or extremely low)\nEG_sim : array\n        of floats, average value of G from permutations\nVG_sim : array\n     ",
+    "metadata": {
+      "model_name": "G_Local",
+      "full_class": "esda.getisord.G_Local",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.getisord",
+      "doc_length": 4364
+    }
+  },
+  {
+    "page_content": "Model: Gamma\nClass: esda.gamma.Gamma\nType: exploratory_spatial_analysis\n\nDocumentation:\nGamma index for spatial autocorrelation\n\n\nParameters\n----------\n\ny               : array\n                  variable measured across n spatial units\nw               : W | Graph\n                  spatial weights instance as W or Graph aligned with y\n                  can be binary or row-standardized\noperation       : {'c', 's', 'a'}\n                  attribute similarity function where,\n                  'c' cross product\n                  's' squared difference\n                  'a' absolute difference\nstandardize     : {False, True}\n                  standardize variables first\n                  False, keep as is\n                  True, standardize to mean zero and variance one\npermutations    : int\n                  number of random permutations for calculation of pseudo-p_values\n\nAttributes\n----------\ny            : array\n               original variable\nw            : W\n               original w object\nop           : {'c', 's', 'a'}\n               attribute similarity function, as per parameters\n               attribute similarity function\nstand        : {False, True}\n               standardization\npermutations : int\n               number of permutations\ngamma        : float\n               value of Gamma index\nsim_g        : array\n               (if permutations>0)\n               vector of Gamma index values for permuted samples\np_sim_g      : array\n               (if permutations>0)\n               p-value based on permutations (one-sided)\n               null: spatial randomness\n               alternative: the observed Gamma is more extreme than under randomness\n               implemented as a two-sided test\nmean_g       : float\n               average of permuted Gamma values\nmin_g        : float\n               minimum of permuted Gamma values\nmax_g        : float\n               maximum of permuted Gamma values\n\n\nExamples\n--------\n\nuse same example as for join counts to show similarity\n\n>>> import libpysal, numpy as np\n>>> from esda.gamma import Gamma\n>>> w = li",
+    "metadata": {
+      "model_name": "Gamma",
+      "full_class": "esda.gamma.Gamma",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.gamma",
+      "doc_length": 3079
+    }
+  },
+  {
+    "page_content": "Model: Geary\nClass: esda.geary.Geary\nType: exploratory_spatial_analysis\n\nDocumentation:\nGlobal Geary C Autocorrelation statistic\n\nParameters\n----------\ny              : array\n                 (n, 1) attribute vector\nw              : W | Graph\n                 spatial weights instance as W or Graph aligned with y\ntransformation : {'R', 'B', 'D', 'U', 'V'}\n                 weights transformation, default is row-standardized.\n                 Other options include \"B\": binary, \"D\":\n                 doubly-standardized, \"U\": untransformed (general\n                 weights), \"V\": variance-stabilizing.\npermutations   : int\n                 number of random permutations for calculation of\n                 pseudo-p_values\n\nAttributes\n----------\ny              : array\n                 original variable\nw              : W | Graph\n                 spatial weights\npermutations   : int\n                 number of permutations\nC              : float\n                 value of statistic\nEC             : float\n                 expected value\nVC             : float\n                 variance of G under normality assumption\nz_norm         : float\n                 z-statistic for C under normality assumption\nz_rand         : float\n                 z-statistic for C under randomization assumption\np_norm         : float\n                 p-value under normality assumption (one-tailed)\np_rand         : float\n                 p-value under randomization assumption (one-tailed)\nsim            : array\n                 (if permutations!=0)\n                 vector of I values for permutated samples\np_sim          : float\n                 (if permutations!=0)\n                 p-value based on permutations (one-tailed)\n                 null: sptial randomness\n                 alternative: the observed C is extreme\n                 it is either extremely high or extremely low\nEC_sim         : float\n                 (if permutations!=0)\n                 average value of C from permutations\nVC_sim         : float\n                 (if permutations!=0)\n                 variance of C from p",
+    "metadata": {
+      "model_name": "Geary",
+      "full_class": "esda.geary.Geary",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.geary",
+      "doc_length": 2838
+    }
+  },
+  {
+    "page_content": "Model: Geary_Local\nClass: esda.geary_local.Geary_Local\nType: exploratory_spatial_analysis\n\nDocumentation:\nLocal Geary - Univariate",
+    "metadata": {
+      "model_name": "Geary_Local",
+      "full_class": "esda.geary_local.Geary_Local",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.geary_local",
+      "doc_length": 24
+    }
+  },
+  {
+    "page_content": "Model: Geary_Local_MV\nClass: esda.geary_local_mv.Geary_Local_MV\nType: exploratory_spatial_analysis\n\nDocumentation:\nLocal Geary - Multivariate",
+    "metadata": {
+      "model_name": "Geary_Local_MV",
+      "full_class": "esda.geary_local_mv.Geary_Local_MV",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.geary_local_mv",
+      "doc_length": 26
+    }
+  },
+  {
+    "page_content": "Model: Join_Counts\nClass: esda.join_counts.Join_Counts\nType: exploratory_spatial_analysis\n\nDocumentation:\nBinary Join Counts\n\n\nParameters\n----------\n\ny               : array\n                  binary variable measured across n spatial units\nw               : W | Graph\n                  spatial weights instance as W or Graph aligned with y\npermutations    : int\n                  number of random permutations for calculation of pseudo-p_values\n\nAttributes\n----------\ny            : array\n               original variable\nw            : W\n               original w object\npermutations : int\n               number of permutations\nbb           : float\n               number of black-black joins\nww           : float\n               number of white-white joins\nbw           : float\n               number of black-white joins\nJ            : float\n               number of joins\nsim_bb       : array\n               (if permutations>0)\n               vector of bb values for permuted samples\np_sim_bb     : array\n              (if permutations>0)\n               p-value based on permutations (one-sided)\n               null: spatial randomness\n               alternative: the observed bb is greater than under randomness\nmean_bb      : float\n               average of permuted bb values\nmin_bb       : float\n               minimum of permuted bb values\nmax_bb       : float\n               maximum of permuted bb values\nsim_bw       : array\n               (if permutations>0)\n               vector of bw values for permuted samples\np_sim_bw     : array\n               (if permutations>0)\n               p-value based on permutations (one-sided)\n               null: spatial randomness\n               alternative: the observed bw is greater than under randomness\nmean_bw      : float\n               average of permuted bw values\nmin_bw       : float\n               minimum of permuted bw values\nmax_bw       : float\n               maximum of permuted bw values\nchi2         : float\n               Chi-square statistic on contingency table for join counts\nchi2_p       : float\n               Analytical p-value for c",
+    "metadata": {
+      "model_name": "Join_Counts",
+      "full_class": "esda.join_counts.Join_Counts",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.join_counts",
+      "doc_length": 3349
+    }
+  },
+  {
+    "page_content": "Model: Join_Counts_Local\nClass: esda.join_counts_local.Join_Counts_Local\nType: exploratory_spatial_analysis\n\nDocumentation:\nUnivariate Local Join Count Statistic",
+    "metadata": {
+      "model_name": "Join_Counts_Local",
+      "full_class": "esda.join_counts_local.Join_Counts_Local",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.join_counts_local",
+      "doc_length": 37
+    }
+  },
+  {
+    "page_content": "Model: Join_Counts_Local_BV\nClass: esda.join_counts_local_bv.Join_Counts_Local_BV\nType: exploratory_spatial_analysis\n\nDocumentation:\nUnivariate Local Join Count Statistic",
+    "metadata": {
+      "model_name": "Join_Counts_Local_BV",
+      "full_class": "esda.join_counts_local_bv.Join_Counts_Local_BV",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.join_counts_local_bv",
+      "doc_length": 37
+    }
+  },
+  {
+    "page_content": "Model: Join_Counts_Local_MV\nClass: esda.join_counts_local_mv.Join_Counts_Local_MV\nType: exploratory_spatial_analysis\n\nDocumentation:\nMultivariate Local Join Count Statistic",
+    "metadata": {
+      "model_name": "Join_Counts_Local_MV",
+      "full_class": "esda.join_counts_local_mv.Join_Counts_Local_MV",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.join_counts_local_mv",
+      "doc_length": 39
+    }
+  },
+  {
+    "page_content": "Model: LOSH\nClass: esda.losh.LOSH\nType: exploratory_spatial_analysis\n\nDocumentation:\nLocal spatial heteroscedasticity (LOSH)",
+    "metadata": {
+      "model_name": "LOSH",
+      "full_class": "esda.losh.LOSH",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.losh",
+      "doc_length": 39
+    }
+  },
+  {
+    "page_content": "Model: Moran\nClass: esda.moran.Moran\nType: exploratory_spatial_analysis\n\nDocumentation:\nMoran's I Global Autocorrelation Statistic\n\nParameters\n----------\n\ny               : array\n                  variable measured across n spatial units\nw               : W | Graph\n                  spatial weights instance as W or Graph aligned with y\ntransformation  : {'R', 'B', 'D', 'U', 'V'}\n              weights transformation, default is row-standardized \"r\".\n              Other options include\n              \"B\": binary,\n              \"D\": doubly-standardized,\n              \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n              \"V\": variance-stabilizing.\npermutations    : int\n                  number of random permutations for calculation of\n                  pseudo-p_values\ntwo_tailed      : boolean\n                  If True (default) analytical p-values for Moran are two\n                  tailed, otherwise if False, they are one-tailed.\n\nAttributes\n----------\ny            : array\n               original variable\nw            : W | Graph\n               original w object\nz            : array\n               zero-mean, unit standard deviation normalized y\npermutations : int\n               number of permutations\nI            : float\n               value of Moran's I\nEI           : float\n               expected value under normality assumption\nVI_norm      : float\n               variance of I under normality assumption\nseI_norm     : float\n               standard deviation of I under normality assumption\nz_norm       : float\n               z-value of I under normality assumption\np_norm       : float\n               p-value of I under normality assumption\nVI_rand      : float\n               variance of I under randomization assumption\nseI_rand     : float\n               standard deviation of I under randomization assumption\nz_rand       : float\n               z-value of I under randomization assumption\np_rand       : float\n               p-value of I under randomization assumption\ntwo_tailed   : boolean\n               If True",
+    "metadata": {
+      "model_name": "Moran",
+      "full_class": "esda.moran.Moran",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 3979
+    }
+  },
+  {
+    "page_content": "Model: MoranLocalConditional\nClass: esda.moran_local_mv.MoranLocalConditional\nType: exploratory_spatial_analysis\n\nDocumentation:\nFit a local moran statistic for y after regressing out the\neffects of confounding X on y. A \"stronger\" version of the\nMoranLocalPartial statistic, as defined by :cite:`wolf2024confounded`",
+    "metadata": {
+      "model_name": "MoranLocalConditional",
+      "full_class": "esda.moran_local_mv.MoranLocalConditional",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran_local_mv",
+      "doc_length": 187
+    }
+  },
+  {
+    "page_content": "Model: MoranLocalPartial\nClass: esda.moran_local_mv.MoranLocalPartial\nType: exploratory_spatial_analysis\n\nDocumentation:\n",
+    "metadata": {
+      "model_name": "MoranLocalPartial",
+      "full_class": "esda.moran_local_mv.MoranLocalPartial",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran_local_mv",
+      "doc_length": 0
+    }
+  },
+  {
+    "page_content": "Model: Moran_BV\nClass: esda.moran.Moran_BV\nType: exploratory_spatial_analysis\n\nDocumentation:\nBivariate Moran's I\n\nParameters\n----------\nx : array\n    x-axis variable\ny : array\n    wy will be on y axis\nw : W | Graph\n    spatial weights instance as W or Graph aligned with x and y\ntransformation  : {'R', 'B', 'D', 'U', 'V'}\n                  weights transformation, default is row-standardized \"r\".\n                  Other options include\n                  \"B\": binary,\n                  \"D\": doubly-standardized,\n                  \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n                  \"V\": variance-stabilizing.\npermutations    : int\n                  number of random permutations for calculation of pseudo\n                  p_values\n\nAttributes\n----------\nzx            : array\n                original x variable standardized by mean and std\nzy            : array\n                original y variable standardized by mean and std\nw             : W | Graph\n                original w object\npermutation   : int\n                number of permutations\nI             : float\n                value of bivariate Moran's I\nsim           : array\n                (if permutations>0)\n                vector of I values for permuted samples\np_sim         : float\n                (if permutations>0)\n                p-value based on permutations (one-sided)\n                null: spatial randomness\n                alternative: the observed I is extreme\n                it is either extremely high or extremely low\nEI_sim        : array\n                (if permutations>0)\n                average value of I from permutations\nVI_sim        : array\n                (if permutations>0)\n                variance of I from permutations\nseI_sim       : array\n                (if permutations>0)\n                standard deviation of I under permutations.\nz_sim         : array\n                (if permutations>0)\n                standardized I based on permutations\np_z_sim       : float\n                (if permutations>0)\n                p-value based on st",
+    "metadata": {
+      "model_name": "Moran_BV",
+      "full_class": "esda.moran.Moran_BV",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 2971
+    }
+  },
+  {
+    "page_content": "Model: Moran_Local\nClass: esda.moran.Moran_Local\nType: exploratory_spatial_analysis\n\nDocumentation:\nLocal Moran Statistics.\n\n\nParameters\n----------\ny : array\n    (n,1), attribute array\nw : W | Graph\n    spatial weights instance as W or Graph aligned with y\ntransformation : {'R', 'B', 'D', 'U', 'V'}\n     weights transformation,  default is row-standardized \"r\".\n     Other options include\n     \"B\": binary,\n     \"D\": doubly-standardized,\n     \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n     \"V\": variance-stabilizing.\npermutations : int\n    number of random permutations for calculation of pseudo\n    p_values\ngeoda_quads : boolean\n    (default=False)\n    If True use GeoDa scheme: HH=1, LL=2, LH=3, HL=4\n    If False use PySAL Scheme: HH=1, LH=2, LL=3, HL=4\nn_jobs : int\n    Number of cores to be used in the conditional randomisation. If -1,\n    all available cores are used.\nkeep_simulations : Boolean\n    (default=True)\n    If True, the entire matrix of replications under the null\n    is stored in memory and accessible; otherwise, replications\n    are not saved\nseed : None/int\n       Seed to ensure reproducibility of conditional randomizations.\n       Must be set here, and not outside of the function, since numba\n       does not correctly interpret external seeds nor\n       numpy.random.RandomState instances.\nisland_weight:\n    value to use as a weight for the \"fake\" neighbor for every island.\n    If numpy.nan, will propagate to the final local statistic depending\n    on the `stat_func`. If 0, then the lag is always zero for islands.\n\nAttributes\n----------\n\ny : array\n    original variable\nw : W | Graph\n    original w object\nz : array\n    zero-mean, unit standard deviation normalized y\npermutations : int\n    number of random permutations for calculation of pseudo p_values\nIs : array\n    local Moran's I values\nq : array\n    (if permutations>0)\n    values indicate quandrant location 1 HH,  2 LH,  3 LL,  4 HL\nsim : array (permutations by n)\n    (if permutations>0)\n    I values for permuted samples\np_sim : array\n    (if permutations>0)\n",
+    "metadata": {
+      "model_name": "Moran_Local",
+      "full_class": "esda.moran.Moran_Local",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 5268
+    }
+  },
+  {
+    "page_content": "Model: Moran_Local_BV\nClass: esda.moran.Moran_Local_BV\nType: exploratory_spatial_analysis\n\nDocumentation:\nBivariate Local Moran Statistics.\n\n\nParameters\n----------\nx : array\n    x-axis variable\ny : array\n    (n,1), wy will be on y axis\nw : W | Graph\n    spatial weights instance as W or Graph aligned with y\ntransformation : {'R', 'B', 'D', 'U', 'V'}\n    weights transformation,  default is row-standardized \"r\".\n    Other options include\n    \"B\": binary,\n    \"D\": doubly-standardized,\n    \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n    \"V\": variance-stabilizing.\npermutations   : int\n    number of random permutations for calculation of pseudo\n    p_values\ngeoda_quads    : boolean\n    (default=False)\n    If True use GeoDa scheme: HH=1, LL=2, LH=3, HL=4\n    If False use PySAL Scheme: HH=1, LH=2, LL=3, HL=4\nnjobs : int\n    number of workers to use to compute the local statistic.\nkeep_simulations : Boolean\n    (default=True)\n    If True, the entire matrix of replications under the null\n    is stored in memory and accessible; otherwise, replications\n    are not saved\nseed : None/int\n    Seed to ensure reproducibility of conditional randomizations.\n    Must be set here, and not outside of the function, since numba\n    does not correctly interpret external seeds nor\n    numpy.random.RandomState instances.\nisland_weight:\n    value to use as a weight for the \"fake\" neighbor for every island.\n    If numpy.nan, will propagate to the final local statistic depending\n    on the `stat_func`. If 0, then the lag is always zero for islands.\n\nAttributes\n----------\n\nzx : array\n    original x variable standardized by mean and std\nzy : array\n    original y variable standardized by mean and std\nw : W | Graph\n    original w object\npermutations : int\n    number of random permutations for calculation of pseudo p_values\nIs : float\n    value of Moran's I\nq : array\n    (if permutations>0)\n    values indicate quandrant location 1 HH,  2 LH,  3 LL,  4 HL\nsim : array\n    (if permutations>0) vector of I values for permuted samples\np_sim : array\n    (if permutations>0",
+    "metadata": {
+      "model_name": "Moran_Local_BV",
+      "full_class": "esda.moran.Moran_Local_BV",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 3659
+    }
+  },
+  {
+    "page_content": "Model: Moran_Local_Rate\nClass: esda.moran.Moran_Local_Rate\nType: exploratory_spatial_analysis\n\nDocumentation:\nAdjusted Local Moran Statistics for Rate Variables :cite:`Assuncao1999`.\n\nParameters\n----------\ne : array\n    (n,1), an event variable across n spatial units\nb : array\n    (n,1), a population-at-risk variable across n spatial units\nw : W | Graph\n    spatial weights instance as W or Graph aligned with y\nadjusted : boolean\n    whether or not local Moran statistics need to be adjusted for\n    rate variable\ntransformation : {'R', 'B', 'D', 'U', 'V'}\n    weights transformation,  default is row-standardized \"r\".\n    Other options include\n    \"B\": binary,\n    \"D\": doubly-standardized,\n    \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n    \"V\": variance-stabilizing.\npermutations : int\n    number of random permutations for calculation of pseudo\n    p_values\ngeoda_quads : boolean\n     (default=False)\n     If True use GeoDa scheme: HH=1, LL=2, LH=3, HL=4\n     If False use PySAL Scheme: HH=1, LH=2, LL=3, HL=4\nnjobs : int\n    number of workers to use to compute the local statistic.\nkeep_simulations : Boolean\n    (default=True)\n    If True, the entire matrix of replications under the null\n    is stored in memory and accessible; otherwise, replications\n    are not saved\nseed : None/int\n    Seed to ensure reproducibility of conditional randomizations.\n    Must be set here, and not outside of the function, since numba does not\n    correctly interpret external seeds nor numpy.random.RandomState instances.\nisland_weight : float\n    value to use as a weight for the \"fake\" neighbor for every island.\n    If numpy.nan, will propagate to the final local statistic depending\n    on the `stat_func`. If 0, then the lag is always zero for islands.\n\nAttributes\n----------\ny : array\n    rate variables computed from parameters e and b\n    if adjusted is True, y is standardized rates\n    otherwise, y is raw rates\nz : array\n    zero-mean, unit standard deviation normalized y\nw : W | Graph\n    original w object\npermutations : int\n    number of random permutations ",
+    "metadata": {
+      "model_name": "Moran_Local_Rate",
+      "full_class": "esda.moran.Moran_Local_Rate",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 3882
+    }
+  },
+  {
+    "page_content": "Model: Moran_Rate\nClass: esda.moran.Moran_Rate\nType: exploratory_spatial_analysis\n\nDocumentation:\nAdjusted Moran's I Global Autocorrelation Statistic for Rate\nVariables :cite:`Assuncao1999`\n\nParameters\n----------\n\ne               : array\n                  an event variable measured across n spatial units\nb               : array\n                  a population-at-risk variable measured across n spatial\n                  units\nw               : W | Graph\n                  spatial weights instance as W or Graph aligned with e and b\nadjusted        : boolean\n                  whether or not Moran's I needs to be adjusted for rate\n                  variable\ntransformation  : {'R', 'B', 'D', 'U', 'V'}\n                  weights transformation, default is row-standardized \"r\".\n                  Other options include\n                  \"B\": binary,\n                  \"D\": doubly-standardized,\n                  \"O\": restore original transformation (applicable only if ``w`` is  passed as ``W``),\n                  \"V\": variance-stabilizing.\ntwo_tailed      : boolean\n                  If True (default), analytical p-values for Moran's I are\n                  two-tailed, otherwise they are one tailed.\npermutations    : int\n                  number of random permutations for calculation of pseudo\n                  p_values\n\nAttributes\n----------\ny            : array\n               rate variable computed from parameters e and b\n               if adjusted is True, y is standardized rates\n               otherwise, y is raw rates\nz            : array\n               zero-mean, unit standard deviation normalized y\nw            : W | Graph\n               original w object\npermutations : int\n               number of permutations\nI            : float\n               value of Moran's I\nEI           : float\n               expected value under normality assumption\nVI_norm      : float\n               variance of I under normality assumption\nseI_norm     : float\n               standard deviation of I under normality assumption\nz_norm       : float\n               z-value of I under normality ass",
+    "metadata": {
+      "model_name": "Moran_Rate",
+      "full_class": "esda.moran.Moran_Rate",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.moran",
+      "doc_length": 3949
+    }
+  },
+  {
+    "page_content": "Model: Smaup\nClass: esda.smaup.Smaup\nType: exploratory_spatial_analysis\n\nDocumentation:\nS-maup: Statistical Test to Measure the Sensitivity\nto the Modifiable Areal Unit Problem.\n\nParameters\n----------\n\nn               : int\n                  number of spatial units\nk               : int\n                  number of regions\nrho             : float\n                  rho value (level of spatial autocorrelation)\n                  ranges from -1 to 1\n\nAttributes\n----------\nn               : int\n                  number of spatial units\nk               : int\n                  number of regions\nrho             : float\n                  rho value (level of spatial autocorrelation)\n                  ranges from -1 to 1\nsmaup           : float\n                : S-maup statistic (M)\ncritical_01     : float\n                : critical value at 0.99 confidence level\ncritical_05     : float\n                : critical value at 0.95 confidence level\ncritical_1      : float\n                : critical value at 0.90 confidence level\nsummary         : string\n                : message with interpretation of results\n\nNotes\n-----\nTechnical details and derivations can be found in :cite:`duque18`.\n\n\nExamples\n--------\n>>> import libpysal\n>>> import numpy as np\n>>> from esda.moran import Moran\n>>> from esda.smaup import Smaup\n>>> w = libpysal.io.open(libpysal.examples.get_path(\"stl.gal\")).read()\n>>> f = libpysal.io.open(libpysal.examples.get_path(\"stl_hom.txt\"))\n>>> y = np.array(f.by_col['HR8893'])\n>>> rho = Moran(y,  w).I\n>>> n = len(y)\n>>> k = int(n/2)\n>>> s = Smaup(n,k,rho)\n>>> s.smaup\n0.15221341690376405\n>>> s.critical_01\n0.38970613333333337\n>>> s.critical_05\n0.3557221333333333\n>>> s.critical_1\n0.3157950666666666\n>>> s.summary\n'Pseudo p-value > 0.10 (H0 is not rejected)'\n\nSIDS example replicating OpenGeoda\n\n>>> w = libpysal.io.open(libpysal.examples.get_path(\"sids2.gal\")).read()\n>>> f = libpysal.io.open(libpysal.examples.get_path(\"sids2.dbf\"))\n>>> SIDR = np.array(f.by_col(\"SIDR74\"))\n>>> from esda.moran import Moran\n>>> rho = Moran(SIDR,  w).I\n>>> n = len(y)\n>>> k = int(n/2)\n>>",
+    "metadata": {
+      "model_name": "Smaup",
+      "full_class": "esda.smaup.Smaup",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.smaup",
+      "doc_length": 2222
+    }
+  },
+  {
+    "page_content": "Model: Spatial_Pearson\nClass: esda.lee.Spatial_Pearson\nType: exploratory_spatial_analysis\n\nDocumentation:\nGlobal Spatial Pearson Statistic",
+    "metadata": {
+      "model_name": "Spatial_Pearson",
+      "full_class": "esda.lee.Spatial_Pearson",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.lee",
+      "doc_length": 32
+    }
+  },
+  {
+    "page_content": "Model: Spatial_Pearson_Local\nClass: esda.lee.Spatial_Pearson_Local\nType: exploratory_spatial_analysis\n\nDocumentation:\nLocal Spatial Pearson Statistic",
+    "metadata": {
+      "model_name": "Spatial_Pearson_Local",
+      "full_class": "esda.lee.Spatial_Pearson_Local",
+      "type": "exploratory_spatial_analysis",
+      "source": "pysal_esda",
+      "module": "esda.lee",
+      "doc_length": 31
+    }
+  }
+]

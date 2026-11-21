@@ -1,0 +1,83 @@
+# Build the Mac app (.dmg) on GitHub's macOS machines.
+#
+# Run it: GitHub -> Actions -> "Build Mac app" -> "Run workflow", enter the
+# version (e.g. 0.1.1). Or push a tag such as v0.1.1. Each Mac type builds in
+# its own job; download the .dmg files from the run's "Artifacts" section.
+#
+# The build itself is desktop/build/build_mac.py (same app contents as the
+# Windows installer: no .env, data or personal data sources). The app is
+# signed ad-hoc only, so on another Mac the first open is right-click > Open.
+
+name: Build Mac app
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, e.g. 0.1.1"
+        required: true
+        default: "0.1.1"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Mac (${{ matrix.label }})
+    strategy:
+      fail-fast: false            # one Mac type failing doesn't cancel the other
+      matrix:
+        include:
+          - label: Apple Silicon
+            runner: macos-15        # arm64
+            arch: aarch64
+          - label: Intel
+            runner: macos-15-intel  # x86_64; if GitHub retires this label, use its current Intel macOS runner
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 75
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        shell: bash
+        run: |
+          v="${{ github.event.inputs.version }}"
+          [ -z "$v" ] && v="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          echo "Building version $v on $(uname -m)"
+
+      - name: Find Python 3.13 (python-build-standalone)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="$(python3 desktop/build/find_python_tarball.py ${{ matrix.arch }})"
+          echo "Using $url"
+          echo "PY_TARBALL=$url" >> "$GITHUB_ENV"
+
+      - name: Build the app and .dmg
+        shell: bash
+        run: |
+          python3 desktop/build/build_mac.py --version "$VERSION" \
+            --python-tarball "$PY_TARBALL" --keep-stage
+
+      - name: Smoke test (the bundled Python loads the app)
+        shell: bash
+        env:
+          GIS_CATALOG_SYNC: "0"
+        run: |
+          RES="build/mac_stage/GIS Co-Scientist.app/Contents/Resources"
+          cd "$RES/app/WebUI"
+          "../../runtime/bin/python3" -E -s -c "import sys; sys.path.insert(0, '..'); import app; print('Flask app loaded:', app.app.name)"
+
+      - name: Upload the .dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: GIS-CoScientist-${{ env.VERSION }}-mac-${{ matrix.arch }}
+          path: dist/*.dmg
+          if-no-files-found: error
+          retention-days: 30

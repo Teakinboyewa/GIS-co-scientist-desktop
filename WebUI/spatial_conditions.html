@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spatial Conditions · GIS Co-Scientist</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --panel: #ffffff; --text: #1f2330; --muted: #6b7080;
+    --border: #e1e4ec; --accent: #667eea; --accent-soft: #eef0fd;
+    --mark: #fff3c4; --code-bg: #f7f8fa; --off: #b8bccb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171e; --panel: #1d2029; --text: #e6e8ef; --muted: #9aa0b2;
+      --border: #2e3240; --accent: #8b9cf6; --accent-soft: #262b45;
+      --mark: #4a4120; --code-bg: #171a22; --off: #555a6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 20px 24px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  header h1 { margin: 0 0 4px; font-size: 1.3em; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9em; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; }
+  nav { display: flex; flex-direction: column; gap: 6px; }
+  nav h2 { font-size: 0.75em; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 10px 0 2px; }
+  nav button { text-align: left; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+               background: var(--panel); color: var(--text); cursor: pointer; font: inherit; }
+  nav button small { display: block; color: var(--muted); font-size: 0.8em; }
+  nav button.active { border-color: var(--accent); background: var(--accent-soft); }
+  nav button.unbuilt { color: var(--off); }
+  main { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; min-width: 0; }
+  main h2 { margin: 0 0 6px; }
+  main h3 { margin: 26px 0 8px; font-size: 1em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+  .chip { font-size: 0.8em; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent); }
+  .chip.off { color: var(--off); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .actions a { padding: 7px 12px; border-radius: 7px; border: 1px solid var(--border); color: var(--text);
+               text-decoration: none; font-size: 0.88em; background: var(--code-bg); }
+  .actions a.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+        white-space: pre-wrap; word-break: break-word; font: 12.5px/1.5 ui-monospace, Consolas, monospace;
+        max-height: 520px; overflow: auto; margin: 0; }
+  pre .base { color: var(--muted); }
+  pre mark { background: var(--mark); color: inherit; }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+  .note { color: var(--muted); }
+  .tool { margin: 6px 0; }
+  .tool code { font-weight: 600; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Spatial conditions</h1>
+  <p id="kb-line">Loading…</p>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="detail"><p class="note">Loading…</p></main>
+</div>
+<script>
+const el = (tag, props = {}, ...kids) => {
+  const n = document.createElement(tag);
+  Object.entries(props).forEach(([k, v]) => k === 'class' ? n.className = v : n[k] = v);
+  kids.flat().forEach(k => n.append(k));
+  return n;
+};
+const enc = encodeURIComponent;
+
+async function getJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error((await r.json()).error || r.statusText);
+  return r.json();
+}
+
+function chip(label, on) { return el('span', { class: `chip ${on ? 'on' : 'off'}`, textContent: `${on ? '✓' : '–'} ${label}` }); }
+
+async function show(name) {
+  location.hash = enc(name);
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.name === name));
+  const main = document.getElementById('detail');
+  main.replaceChildren(el('p', { class: 'note', textContent: 'Loading…' }));
+  let d;
+  try { d = await getJSON(`/api/spatial-conditions/${enc(name)}`); }
+  catch (e) { main.replaceChildren(el('p', { class: 'note', textContent: e.message })); return; }
+
+  const base = `/api/spatial-conditions/${enc(name)}/download`;
+  const kids = [
+    el('h2', { textContent: `${d.name} — ${d.label}` }),
+    el('div', { class: 'chips' },
+       chip(`knowledge: ${d.kb_delivery}`, d.kb_delivery !== 'none'),
+       chip('structured assumptions', d.structured_assumptions),
+       chip('grounded diagnostics', d.diagnostics),
+       chip('spatial critic', d.critic)),
+  ];
+  if (!d.built) {
+    kids.push(el('p', { class: 'note', textContent: d.note }),
+              el('div', { class: 'actions' }, el('a', { href: `${base}/bundle`, textContent: 'Download description (.md)' })));
+    main.replaceChildren(...kids);
+    return;
+  }
+  const actions = el('div', { class: 'actions' },
+    el('a', { class: 'primary', href: `${base}/bundle`, textContent: 'Download everything (.md)' }),
+    el('a', { href: `${base}/system_prompt`, textContent: 'Full system prompt (.txt)' }));
+  if (d.addition) actions.append(el('a', { href: `${base}/addition`, textContent: 'Added text only (.txt)' }));
+  if (Object.keys(d.skill_files).length) actions.append(el('a', { href: `${base}/skills`, textContent: 'Skill files (.md)' }));
+  kids.push(el('p', { textContent: d.delivery_summary }), actions);
+
+  kids.push(el('h3', { textContent: 'Added to the planner’s system prompt' }),
+            d.addition ? el('pre', { textContent: d.addition })
+                       : el('p', { class: 'note', textContent: 'Nothing — the planner receives the published prompt unchanged.' }));
+
+  if (d.tools.length) {
+    kids.push(el('h3', { textContent: 'Tools added to the planner' }),
+      ...d.tools.map(t => el('div', { class: 'tool' }, el('code', { textContent: t.name }),
+                             ` — ${t.description.replace(/\s+/g, ' ')}`)));
+  }
+  if (d.components.length) {
+    kids.push(el('h3', { textContent: 'Proposed-method components' }),
+      ...d.components.flatMap(c => [
+        el('p', {}, el('strong', { textContent: c.name }), ` — ${c.summary}`),
+        ...(c.prompt ? [el('details', {}, el('summary', { textContent: 'Prompt' }),
+                           el('pre', { textContent: c.prompt }))] : []),
+      ]));
+  }
+  if (Object.keys(d.skill_files).length) {
+    kids.push(el('h3', { textContent: 'Skill files (loaded on request)' }),
+      ...Object.entries(d.skill_files).map(([n, text]) =>
+        el('details', {}, el('summary', { textContent: n }), el('pre', { textContent: text }))));
+  }
+  if (d.retrievable_entries.length) {
+    kids.push(el('h3', { textContent: `Entries the search tool can return (${d.retrievable_entries.length})` }),
+      el('details', {}, el('summary', { textContent: 'Show all entries' }),
+         el('pre', { textContent: d.retrievable_entries.join('\n\n') })));
+  }
+  const full = el('pre');
+  full.append(el('span', { class: 'base', textContent: d.base_prompt }));
+  const tail = d.system_prompt.slice(d.base_prompt.length);
+  if (tail) full.append(el('mark', { textContent: tail }));
+  kids.push(el('h3', { textContent: 'Full planner system prompt' }),
+            el('details', {}, el('summary', { textContent: d.addition
+              ? 'Show (published prompt in grey, this condition’s addition highlighted)'
+              : 'Show (published prompt, unchanged)' }), full));
+  main.replaceChildren(...kids);
+}
+
+(async () => {
+  let data;
+  try { data = await getJSON('/api/spatial-conditions'); }
+  catch (e) { document.getElementById('kb-line').textContent = e.message; return; }
+  const kbLine = document.getElementById('kb-line');
+  kbLine.replaceChildren(
+    `What each condition gives the planning agent. Knowledge base v${data.kb_version} · sha256 ${data.kb_sha256.slice(0, 12)}… · `,
+    el('a', { href: '/api/spatial-knowledge-base/download', textContent: 'download spatial_kb.yaml' }));
+  const nav = document.getElementById('nav');
+  const groups = [['Baselines', c => /^B\d$/.test(c.name)], ['Proposed method & ablations', c => !/^B\d$/.test(c.name)]];
+  for (const [title, test] of groups) {
+    nav.append(el('h2', { textContent: title }));
+    data.conditions.filter(test).forEach(c => {
+      const b = el('button', { class: c.built ? '' : 'unbuilt' },
+                   c.name, el('small', { textContent: c.built ? c.label : `${c.label} (not built yet)` }));
+      b.dataset.name = c.name;
+      b.onclick = () => show(c.name);
+      nav.append(b);
+    });
+  }
+  const wanted = decodeURIComponent(location.hash.slice(1));
+  show(data.conditions.some(c => c.name === wanted) ? wanted : 'B0');
+})();
+</script>
+</body>
+</html>

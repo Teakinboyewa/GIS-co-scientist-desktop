@@ -1,0 +1,124 @@
+data_source_name = "OpenAQ API (global air quality observations)"
+brief_description = "OpenAQ aggregates global air quality measurements from government and research-grade sources, providing time-stamped observations for common pollutants (e.g., PM2.5, PM10, NO2, O3, SO2, CO, BC) at monitoring locations. Coverage is global where data providers exist, with records spanning historical data through near-real-time updates depending on the underlying provider. Data is returned as JSON (tabular observation records with coordinates) suitable for saving as CSV (or converting to spatial formats if needed)."
+handbook = """
+Base URL: https://api.openaq.org
+API version: v2 endpoints are under https://api.openaq.org/v2/ (OpenAQ has evolved over time; use the current documented endpoints from the official docs if responses differ).
+Primary endpoint for measurements (observations): GET https://api.openaq.org/v2/measurements
+Common endpoint for station metadata: GET https://api.openaq.org/v2/locations
+Authentication: generally no API key required for basic access; if the service enforces keys/quotas in your environment, follow the official docs for headers/tokens (do not invent credentials).
+Measurements query parameters (most used): date_from=ISO8601 timestamp (e.g., 2024-01-01T00:00:00Z); date_to=ISO8601 timestamp; parameter=pollutant code (e.g., pm25, pm10, no2, o3, so2, co, bc; exact set varies); limit=integer (max per page, per docs); page=integer (1..n for pagination); sort=desc|asc (when supported); order_by=datetime (when supported).
+Spatial filtering options (use documented names as supported by the API): coordinates=lat,lon and radius=meters (circular search), or bbox=minLon,minLat,maxLon,maxLat (if supported by the endpoint/version).
+If you are given a place name (city/region/country/park), resolve it to a bounding box via OpenStreetMap (Nominatim) using osmnx: gdf = ox.geocode_to_gdf(place); west,south,east,north = gdf.unary_union.bounds; then query OpenAQ with bbox if supported, otherwise query by coordinates at the bbox centroid with a radius that covers the bbox.
+Example query pattern (illustrative -- substitute your own place/pollutant/date range for the actual task at hand): parameter=pm25, date_from/date_to spanning the requested window, and coordinates/radius or bbox derived from the requested place; this is one worked pattern, not a fixed set of values -- this handbook is reused across many different retrieval tasks against this source.
+Expected response structure (typical v2): a JSON object with a \"meta\" section (pagination/limits) and a \"results\" array of records; measurement records commonly include fields like location, city, country, coordinates{latitude,longitude}, parameter, value, unit, date{utc,local}, and attribution/source.
+Pagination: if meta indicates additional pages (e.g., meta.found > meta.limit), loop page=1..n until no results; do not assume single-page responses.
+Rate limiting: obey HTTP 429 responses; if returned, back off and retry after the server-provided Retry-After header (if present). (Do not hardcode undocumented limits.)
+Immediately after every HTTP request, call response.raise_for_status() before parsing/saving; this prevents silently saving HTML/JSON error payloads.
+Resilience: this endpoint is paginated, so wrap EACH page's request in its own try/except — retry once or twice with a short backoff on failure, and if it still fails, log which page was skipped and continue to the next page rather than aborting the whole download.
+Save format: save measurement records as CSV (tabular time series with lat/lon columns); ensure UTF-8 encoding.
+Datetime handling: preserve the API-provided UTC timestamp string (e.g., date.utc) and optionally parse to pandas datetime; do not localize unless needed.
+Units: do not assume uniform units across parameters; keep the unit field per record.
+Known pitfall: OpenAQ datasets are heterogeneous; some locations may have missing coordinates, missing city, or irregular sampling intervals; filter/clean after download.
+Known pitfall: parameter codes and available endpoints can change between OpenAQ API versions; confirm via the official documentation and adjust only using documented parameter names.
+Your reply must be a single ```python code block.
+The download code must live in a function named download_data().
+The last line of the code must call download_data().
+Do NOT catch exceptions around the initial/setup request(s) — let a genuine bug fail loudly. Only catch exceptions per-page inside the pagination loop, as described above, to retry-then-skip a single failing page without aborting the run."""
+code_example = """
+import time
+import requests
+import pandas as pd
+import osmnx as ox
+
+
+def download_data():
+    # Example: download PM2.5 measurements for a place over a short recent window
+    place_name = \"Los Angeles, California, USA\"
+    gdf = ox.geocode_to_gdf(place_name)
+    west, south, east, north = gdf.unary_union.bounds
+
+    base_url = \"https://api.openaq.org/v2/measurements\"
+    params = {
+        \"parameter\": \"pm25\",
+        \"date_from\": \"2024-01-01T00:00:00Z\",
+        \"date_to\": \"2024-01-08T00:00:00Z\",
+        \"limit\": 1000,
+        \"page\": 1,
+        # Many OpenAQ v2 deployments support bbox; if your response errors, consult the official docs.
+        \"bbox\": f\"{west},{south},{east},{north}\",
+    }
+
+    all_rows = []
+    consecutive_page_failures = 0
+    while True:
+        # Resilience: retry this page up to 3 attempts with backoff. If it
+        # still fails, skip only this page and keep going -- unless several
+        # pages in a row have failed, which means the endpoint itself is
+        # down, not just one bad page, so fail loudly instead of skipping
+        # forever.
+        data = None
+        for attempt in range(3):
+            try:
+                r = requests.get(base_url, params=params, timeout=60)
+                r.raise_for_status()
+                data = r.json()
+                break
+            except requests.exceptions.RequestException as e:
+                if attempt == 2:
+                    print(f\"Skipping page {params['page']} after 3 failed attempts: {e}\")
+                else:
+                    time.sleep(2 ** attempt)
+
+        if data is None:
+            consecutive_page_failures += 1
+            if consecutive_page_failures >= 3:
+                raise RuntimeError(
+                    \"3 consecutive pages failed -- the endpoint looks down, \"
+                    \"not just one bad page; aborting instead of skipping forever.\")
+            params[\"page\"] = params[\"page\"] + 1
+            continue
+        consecutive_page_failures = 0
+
+        results = data.get(\"results\", [])
+        if not results:
+            break
+
+        for rec in results:
+            coords = rec.get(\"coordinates\") or {}
+            date = rec.get(\"date\") or {}
+            all_rows.append(
+                {
+                    \"location\": rec.get(\"location\"),
+                    \"city\": rec.get(\"city\"),
+                    \"country\": rec.get(\"country\"),
+                    \"parameter\": rec.get(\"parameter\"),
+                    \"value\": rec.get(\"value\"),
+                    \"unit\": rec.get(\"unit\"),
+                    \"datetime_utc\": date.get(\"utc\"),
+                    \"datetime_local\": date.get(\"local\"),
+                    \"latitude\": coords.get(\"latitude\"),
+                    \"longitude\": coords.get(\"longitude\"),
+                    \"source_name\": (rec.get(\"source\") or {}).get(\"name\"),
+                }
+            )
+
+        # Advance pagination if meta is present; otherwise keep requesting until empty
+        meta = data.get(\"meta\") or {}
+        found = meta.get(\"found\")
+        limit = meta.get(\"limit\")
+        page = meta.get(\"page\")
+        if found is not None and limit is not None and page is not None:
+            if page * limit >= found:
+                break
+        params[\"page\"] = params[\"page\"] + 1
+
+    df = pd.DataFrame(all_rows)
+    output_file = \"openaq_pm25_los_angeles_2024-01-01_to_2024-01-08.csv\"
+    df.to_csv(output_file, index=False)
+    print(f\"Saved {len(df)} rows to {output_file}\")
+
+
+download_data()"""
+website = "https://docs.openaq.org/"
+requires_key = ""
+key_name = ""

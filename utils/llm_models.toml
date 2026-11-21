@@ -1,0 +1,105 @@
+# Which model and reasoning effort each LLM call in the system uses.
+#
+# Every LLM call has its own name: the section name, a dot, and the key,
+# e.g. research_plan.generate. The code asks for its settings by that name
+# (llm_model("research_plan.generate"), llm_reasoning("research_plan.generate")),
+# so changing a line here changes that one call and nothing else.
+#
+#   model             required
+#   reasoning_effort  optional: none | minimal | low | medium | high | xhigh.
+#                     Leave it out to send no reasoning_effort at all, so the
+#                     model uses its own default.
+#
+# One rule sits on top of this file: gpt-6-luna refuses tools combined with
+# reasoning, so its tool-using calls are always sent reasoning_effort = "none"
+# (utils/agm_helper.py, tool_call_reasoning_effort).
+#
+# Restart the app after editing; the file is read once per process.
+# A call whose name is missing here fails loudly instead of guessing.
+#
+# Not covered here, on purpose: models and efforts a user or an experiment
+# picks at run time (Handbook Studio's, Experiment 2's and the Map
+# Interpreter's pickers) and the Claude provider's defaults. Where those
+# pickers fall back to a default model, it comes from the entries below.
+
+[intent]
+detect = { model = "gpt-6-luna" }                              # Auto mode: classify the message
+
+[chat]
+reply = { model = "gpt-6-luna", reasoning_effort = "low" }     # Chat mode answers
+assistant = { model = "gpt-6-luna", reasoning_effort = "low" } # chat_with_ai helper endpoint
+
+[task_breakdown]                                               # Research Question Understanding Agent
+research = { model = "gpt-6-luna" }                            # Research and Spatial Analysis breakdown
+research_revise = { model = "gpt-6-luna" }                     # ...revised from user feedback
+data_request = { model = "gpt-6-luna" }                        # Data Retriever mode: what to download
+data_request_revise = { model = "gpt-6-luna" }                 # ...revised from user feedback
+parse_question = { model = "gpt-6-luna", reasoning_effort = "low" }  # legacy question parser
+
+[data_retrieval]
+# Source selection, download code and repair (AGSI_DATA_RETRIEVAL_MODEL overrides the model).
+retriever = { model = "gpt-6-luna" }
+# Writing and verifying data-source handbooks.
+handbook_generation = { model = "gpt-6-luna" }
+
+[data]                                                         # Data Agent
+summary = { model = "gpt-6-luna", reasoning_effort = "low" }
+eda = { model = "gpt-6-luna", reasoning_effort = "low" }
+eda_explore = { model = "gpt-6-luna", reasoning_effort = "low" }
+step_code = { model = "gpt-6-luna", reasoning_effort = "low" }
+operation_code = { model = "gpt-6-luna", reasoning_effort = "low" }
+
+[research_plan]                                                # Planning Agent
+generate = { model = "gpt-6-luna", reasoning_effort = "low" }
+review = { model = "gpt-6-luna", reasoning_effort = "low" }
+revise = { model = "gpt-6-luna", reasoning_effort = "low" }    # revised from user feedback
+repair_after_step_delete = { model = "gpt-6-luna" }            # re-link steps after the user deletes one
+
+[execution]                                                    # Research mode objective execution
+route_steps = { model = "gpt-6-luna", reasoning_effort = "low" }
+modeling_code = { model = "gpt-6-luna", reasoning_effort = "low" }
+model_recommendation = { model = "gpt-6-luna" }
+debugger = { model = "gpt-6-luna", reasoning_effort = "low" }
+step_revision = { model = "gpt-6-luna" }                       # rewrite a step's code from user feedback
+
+[result_analysis]
+presentation = { model = "gpt-6-luna", reasoning_effort = "low" }
+presentation_update = { model = "gpt-6-luna", reasoning_effort = "low" }
+discussion = { model = "gpt-6-luna", reasoning_effort = "low" }
+discussion_update = { model = "gpt-6-luna", reasoning_effort = "low" }
+
+[manuscript]                                                   # Reporting Agent
+literature_curation = { model = "gpt-6-luna", reasoning_effort = "low" }
+section_single_call = { model = "gpt-6-luna", reasoning_effort = "low" }
+section_agentic = { model = "gpt-6-luna", reasoning_effort = "low" }  # Introduction, Methods, Results, Discussion
+references = { model = "gpt-6-luna", reasoning_effort = "low" }
+
+[spatial_analysis]                                             # Spatial Analysis mode
+geoprocessing_workflow = { model = "gpt-6-luna" }
+operation_code = { model = "gpt-6-luna" }
+assembly_code = { model = "gpt-6-luna", reasoning_effort = "low" }
+workflow_code_refine = { model = "gpt-6-luna", reasoning_effort = "low" }  # rewrite code from user feedback
+
+[agent_solution]                                               # Data/Modeling Agent solution-graph base class
+graph = { model = "gpt-6-luna" }
+operations = { model = "gpt-6-luna" }
+refine = { model = "gpt-6-luna", reasoning_effort = "low" }
+assembly = { model = "gpt-6-luna", reasoning_effort = "low" }
+debug = { model = "gpt-6-luna" }
+
+[task_manager]                                                 # older Task Manager routing helpers
+init_route = { model = "gpt-6-luna", reasoning_effort = "low" }
+plan_from_objectives = { model = "gpt-6-luna", reasoning_effort = "low" }
+route_step = { model = "gpt-6-luna", reasoning_effort = "low" }
+
+[single_agent]
+agent = { model = "gpt-6-luna", reasoning_effort = "low" }     # Single Agent baseline
+
+[spatial_reasoning]
+components = { model = "gpt-6-luna", reasoning_effort = "low" }  # assumptions, revision and critic (proposed method)
+
+[legacy]
+chat = { model = "gpt-6-luna", reasoning_effort = "low" }      # chat helper in task_solution_testing
+
+[map_interpreter]
+default = { model = "gpt-6-luna" }                             # when its model picker sends none

@@ -1,0 +1,508 @@
+[
+  {
+    "page_content": "Model: LikelihoodModelResults\nClass: spglm.base.LikelihoodModelResults\nType: generalized_linear_model\n\nDocumentation:\nClass to contain results from likelihood models\nParameters\n----------\nmodel : LikelihoodModel instance or subclass instance\n    LikelihoodModelResults holds a reference to the model that is fit.\nparams : 1d array_like\n    parameter estimates from estimated model\nnormalized_cov_params : 2d array\n   Normalized (before scaling) covariance of params. (dot(X.T,X))**-1\nscale : float\n    For (some subset of models) scale will typically be the\n    mean square error from the estimated model (sigma^2)\nReturns\n-------\n**Attributes**\nmle_retvals : dict\n    Contains the values returned from the chosen optimization method if\n    full_output is True during the fit.  Available only if the model\n    is fit by maximum likelihood.  See notes below for the output from\n    the different methods.\nmle_settings : dict\n    Contains the arguments passed to the chosen optimization method.\n    Available if the model is fit by maximum likelihood.  See\n    LikelihoodModel.fit for more information.\nmodel : model instance\n    LikelihoodResults contains a reference to the model that is fit.\nparams : ndarray\n    The parameters estimated for the model.\nscale : float\n    The scaling factor of the model given during instantiation.\ntvalues : array\n    The t-values of the standard errors.\nNotes\n-----\nThe covariance of params is given by scale times normalized_cov_params.\nReturn values by solver if full_output is True during fit:\n    'newton'\n        fopt : float\n            The value of the (negative) loglikelihood at its\n            minimum.\n        iterations : int\n            Number of iterations performed.\n        score : ndarray\n            The score vector at the optimum.\n        Hessian : ndarray\n            The Hessian at the optimum.\n        warnflag : int\n            1 if maxiter is exceeded. 0 if successful convergence.\n        converged : bool\n            True: converged. False: did not converge.\n        allvecs : list\n            List of solutions at each iteration.\n    'nm'\n        fopt : f",
+    "metadata": {
+      "model_name": "LikelihoodModelResults",
+      "full_class": "spglm.base.LikelihoodModelResults",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.base",
+      "doc_length": 5341
+    }
+  },
+  {
+    "page_content": "Model: Results\nClass: spglm.base.Results\nType: generalized_linear_model\n\nDocumentation:\nClass to contain model results\nParameters\n----------\nmodel : class instance\n    the previously specified model instance\nparams : array\n    parameter estimates from the fit model",
+    "metadata": {
+      "model_name": "Results",
+      "full_class": "spglm.base.Results",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.base",
+      "doc_length": 177
+    }
+  },
+  {
+    "page_content": "Model: Binomial\nClass: spglm.family.Binomial\nType: generalized_linear_model\n\nDocumentation:\nBinomial exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Binomial family is the logit link.\n    Available links are logit, probit, cauchy, log, and cloglog.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nBinomial.link : a link instance\n    The link function of the Binomial instance\nBinomial.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Binomial",
+      "full_class": "spglm.family.Binomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 420
+    }
+  },
+  {
+    "page_content": "Model: Family\nClass: spglm.family.Family\nType: generalized_linear_model\n\nDocumentation:\nThe parent class for one-parameter exponential families.\n\nParameters\n----------\nlink : a link function instance\n    Link is the linear transformation function.\n    See the individual families for available links.\nvariance : a variance function\n    Measures the variance as a function of the mean probabilities.\n    See the individual families for the default variance function.\n\nSee Also\n--------\n:ref:`links`",
+    "metadata": {
+      "model_name": "Family",
+      "full_class": "spglm.family.Family",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 409
+    }
+  },
+  {
+    "page_content": "Model: Gamma\nClass: spglm.family.Gamma\nType: generalized_linear_model\n\nDocumentation:\nGamma exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Gamma family is the inverse link.\n    Available links are log, identity, and inverse.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nGamma.link : a link instance\n    The link function of the Gamma instance\nGamma.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Gamma",
+      "full_class": "spglm.family.Gamma",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 394
+    }
+  },
+  {
+    "page_content": "Model: Gaussian\nClass: spglm.family.Gaussian\nType: generalized_linear_model\n\nDocumentation:\nGaussian exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Gaussian family is the identity link.\n    Available links are log, identity, and inverse.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nGaussian.link : a link instance\n    The link function of the Gaussian instance\nGaussian.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Gaussian",
+      "full_class": "spglm.family.Gaussian",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 410
+    }
+  },
+  {
+    "page_content": "Model: Poisson\nClass: spglm.family.Poisson\nType: generalized_linear_model\n\nDocumentation:\nPoisson exponential family.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Poisson family is the log link. Available\n    links are log, identity, and sqrt. See statsmodels.family.links for\n    more information.\n\nAttributes\n----------\nPoisson.link : a link instance\n    The link function of the Poisson instance.\nPoisson.variance : varfuncs instance",
+    "metadata": {
+      "model_name": "Poisson",
+      "full_class": "spglm.family.Poisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 386
+    }
+  },
+  {
+    "page_content": "Model: QuasiPoisson\nClass: spglm.family.QuasiPoisson\nType: generalized_linear_model\n\nDocumentation:\nQuasiPoisson exponential family.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Poisson family is the log link. Available\n    links are log, identity, and sqrt. See statsmodels.family.links for\n    more information.\n\nAttributes\n----------\nPoisson.link : a link instance\n    The link function of the Poisson instance.\nPoisson.variance : varfuncs instance",
+    "metadata": {
+      "model_name": "QuasiPoisson",
+      "full_class": "spglm.family.QuasiPoisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 391
+    }
+  },
+  {
+    "page_content": "Model: GLM\nClass: spglm.glm.GLM\nType: generalized_linear_model\n\nDocumentation:\nGeneralised linear models. Can currently estimate Guassian, Poisson and\nLogisitc regression coefficients. GLM object prepares model input and fit\nmethod performs estimation which then returns a GLMResults object.\n\nParameters\n----------\n    y             : array\n                    n*1, dependent variable.\n    X             : array\n                    n*k, independent variable, exlcuding the constant.\n    family        : string\n                    Model type: 'Gaussian', 'Poisson', 'Binomial'\n    offset        : array\n                    n*1, the offset variable at the ith location. For Poisson model\n                    this term is often the size of the population at risk or\n                    the expected size of the outcome in spatial epidemiology.\n                    Default is None where Ni becomes 1.0 for all locations.\n    y_fix         : array\n                    n*1, the fix intercept value of y\n\nAttributes\n----------\n    y             : array\n                    n*1, dependent variable.\n    X             : array\n                    n*k, independent variable, including constant.\n    family        : string\n                    Model type: 'Gaussian', 'Poisson', 'logistic'\n    n             : integer\n                    Number of observations\n    k             : integer\n                    Number of independent variables\n    df_model      : float\n                    k-1, where k is the number of variables (including\n                    intercept)\n    df_residual   : float\n                    observations minus variables (n-k)\n    mean_y        : float\n                    Mean of y\n    std_y         : float\n                    Standard deviation of y\n    fit_params     : dict\n                    Parameters passed into fit method to define estimation\n                    routine.\n\nExamples\n--------\n>>> import libpysal\n>>> from spglm.glm import GLM\n>>> from spglm import family\n>>> db = libpysal.io.open(libpysal.examples.get_path('columbus.dbf'),'r')\n>>> y = np.arr",
+    "metadata": {
+      "model_name": "GLM",
+      "full_class": "spglm.glm.GLM",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.glm",
+      "doc_length": 2289
+    }
+  },
+  {
+    "page_content": "Model: GLMResults\nClass: spglm.glm.GLMResults\nType: generalized_linear_model\n\nDocumentation:\nResults of estimated GLM and diagnostics.\n\nParameters\n----------\n    model         : GLM object\n                    Pointer to GLM object with estimation parameters.\n    params         : array\n                    k*1, estimared coefficients\n    mu         : array\n                    n*1, predicted y values.\n    w             : array\n                    n*1, final weight used for iwls\n\nAttributes\n----------\n    model         : GLM Object\n                    Points to GLM object for which parameters have been\n                    estimated.\n    y             : array\n                    n*1, dependent variable.\n    x             : array\n                    n*k, independent variable, including constant.\n    family        : string\n                    Model type: 'Gaussian', 'Poisson', 'Logistic'\n    n             : integer\n                    Number of observations\n    k             : integer\n                    Number of independent variables\n    df_model      : float\n                    k-1, where k is the number of variables (including\n                    intercept)\n    df_residual   : float\n                    observations minus variables (n-k)\n    fit_params    : dict\n                    parameters passed into fit method to define estimation\n                    routine.\n    scale         : float\n                    sigma squared used for subsequent computations.\n    params         : array\n                    n*k, estimared beta coefficients\n    w             : array\n                    n*1, final weight values of x\n    mu            : array\n                    n*1, predicted value of y (i.e., fittedvalues)\n    cov_params    : array\n                    Variance covariance matrix (kxk) of betas\n    bse           : array\n                    k*1, standard errors of betas\n    pvalues       : array\n                    k*1, two-tailed pvalues of parameters\n    tvalues       : array\n                    k*1, the tvalues of the standard errors\n    null          : array\n       ",
+    "metadata": {
+      "model_name": "GLMResults",
+      "full_class": "spglm.glm.GLMResults",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.glm",
+      "doc_length": 4902
+    }
+  },
+  {
+    "page_content": "Model: LikelihoodModelResults\nClass: spglm.base.LikelihoodModelResults\nType: generalized_linear_model\n\nDocumentation:\nClass to contain results from likelihood models\nParameters\n----------\nmodel : LikelihoodModel instance or subclass instance\n    LikelihoodModelResults holds a reference to the model that is fit.\nparams : 1d array_like\n    parameter estimates from estimated model\nnormalized_cov_params : 2d array\n   Normalized (before scaling) covariance of params. (dot(X.T,X))**-1\nscale : float\n    For (some subset of models) scale will typically be the\n    mean square error from the estimated model (sigma^2)\nReturns\n-------\n**Attributes**\nmle_retvals : dict\n    Contains the values returned from the chosen optimization method if\n    full_output is True during the fit.  Available only if the model\n    is fit by maximum likelihood.  See notes below for the output from\n    the different methods.\nmle_settings : dict\n    Contains the arguments passed to the chosen optimization method.\n    Available if the model is fit by maximum likelihood.  See\n    LikelihoodModel.fit for more information.\nmodel : model instance\n    LikelihoodResults contains a reference to the model that is fit.\nparams : ndarray\n    The parameters estimated for the model.\nscale : float\n    The scaling factor of the model given during instantiation.\ntvalues : array\n    The t-values of the standard errors.\nNotes\n-----\nThe covariance of params is given by scale times normalized_cov_params.\nReturn values by solver if full_output is True during fit:\n    'newton'\n        fopt : float\n            The value of the (negative) loglikelihood at its\n            minimum.\n        iterations : int\n            Number of iterations performed.\n        score : ndarray\n            The score vector at the optimum.\n        Hessian : ndarray\n            The Hessian at the optimum.\n        warnflag : int\n            1 if maxiter is exceeded. 0 if successful convergence.\n        converged : bool\n            True: converged. False: did not converge.\n        allvecs : list\n            List of solutions at each iteration.\n    'nm'\n        fopt : f",
+    "metadata": {
+      "model_name": "LikelihoodModelResults",
+      "full_class": "spglm.base.LikelihoodModelResults",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.base",
+      "doc_length": 5341
+    }
+  },
+  {
+    "page_content": "Model: Binomial\nClass: spglm.family.Binomial\nType: generalized_linear_model\n\nDocumentation:\nBinomial exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Binomial family is the logit link.\n    Available links are logit, probit, cauchy, log, and cloglog.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nBinomial.link : a link instance\n    The link function of the Binomial instance\nBinomial.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Binomial",
+      "full_class": "spglm.family.Binomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 420
+    }
+  },
+  {
+    "page_content": "Model: Poisson\nClass: spglm.family.Poisson\nType: generalized_linear_model\n\nDocumentation:\nPoisson exponential family.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Poisson family is the log link. Available\n    links are log, identity, and sqrt. See statsmodels.family.links for\n    more information.\n\nAttributes\n----------\nPoisson.link : a link instance\n    The link function of the Poisson instance.\nPoisson.variance : varfuncs instance",
+    "metadata": {
+      "model_name": "Poisson",
+      "full_class": "spglm.family.Poisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 386
+    }
+  },
+  {
+    "page_content": "Model: CDFLink\nClass: spglm.links.CDFLink\nType: generalized_linear_model\n\nDocumentation:\nThe use the CDF of a scipy.stats distribution\n\nCDFLink is a subclass of logit in order to use its _clean method\nfor the link and its derivative.\n\nParameters\n----------\ndbn : scipy.stats distribution\n    Default is dbn=scipy.stats.norm\n\nNotes\n-----\nThe CDF link is untested.",
+    "metadata": {
+      "model_name": "CDFLink",
+      "full_class": "spglm.links.CDFLink",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 273
+    }
+  },
+  {
+    "page_content": "Model: CLogLog\nClass: spglm.links.CLogLog\nType: generalized_linear_model\n\nDocumentation:\nThe complementary log-log transform\n\nCLogLog inherits from Logit in order to have access to its _clean method\nfor the link and its derivative.\n\nNotes\n-----\nCLogLog is untested.",
+    "metadata": {
+      "model_name": "CLogLog",
+      "full_class": "spglm.links.CLogLog",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 176
+    }
+  },
+  {
+    "page_content": "Model: Link\nClass: spglm.links.Link\nType: generalized_linear_model\n\nDocumentation:\nA generic link function for one-parameter exponential family.\n\n`Link` does nothing, but lays out the methods expected of any subclass.",
+    "metadata": {
+      "model_name": "Link",
+      "full_class": "spglm.links.Link",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 134
+    }
+  },
+  {
+    "page_content": "Model: Log\nClass: spglm.links.Log\nType: generalized_linear_model\n\nDocumentation:\nThe log transform\n\nNotes\n-----\ncall and derivative call a private method _clean to trim the data by\nmachine epsilon so that p is in (0,1). log is an alias of Log.",
+    "metadata": {
+      "model_name": "Log",
+      "full_class": "spglm.links.Log",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 162
+    }
+  },
+  {
+    "page_content": "Model: Logit\nClass: spglm.links.Logit\nType: generalized_linear_model\n\nDocumentation:\nThe logit transform\n\nNotes\n-----\ncall and derivative use a private method _clean to make trim p by\nmachine epsilon so that p is in (0,1)\n\nAlias of Logit:\nlogit = Logit()",
+    "metadata": {
+      "model_name": "Logit",
+      "full_class": "spglm.links.Logit",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 169
+    }
+  },
+  {
+    "page_content": "Model: NegativeBinomial\nClass: spglm.links.NegativeBinomial\nType: generalized_linear_model\n\nDocumentation:\nThe negative binomial link function\n\nParameters\n----------\nalpha : float, optional\n    Alpha is the ancillary parameter of the Negative Binomial link\n    function. It is assumed to be nonstochastic.  The default value is 1.\n    Permissible values are usually assumed to be in (.01, 2).",
+    "metadata": {
+      "model_name": "NegativeBinomial",
+      "full_class": "spglm.links.NegativeBinomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 285
+    }
+  },
+  {
+    "page_content": "Model: Power\nClass: spglm.links.Power\nType: generalized_linear_model\n\nDocumentation:\nThe power transform\n\nParameters\n----------\npower : float\n    The exponent of the power transform\n\nNotes\n-----\nAliases of Power:\ninverse = Power(power=-1)\nsqrt = Power(power=.5)\ninverse_squared = Power(power=-2.)\nidentity = Power(power=1.)",
+    "metadata": {
+      "model_name": "Power",
+      "full_class": "spglm.links.Power",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 238
+    }
+  },
+  {
+    "page_content": "Model: cauchy\nClass: spglm.links.cauchy\nType: generalized_linear_model\n\nDocumentation:\nThe Cauchy (standard Cauchy CDF) transform\n\nNotes\n-----\ng(p) = scipy.stats.cauchy.ppf(p)\n\ncauchy is an alias of CDFLink with dbn=scipy.stats.cauchy",
+    "metadata": {
+      "model_name": "cauchy",
+      "full_class": "spglm.links.cauchy",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 147
+    }
+  },
+  {
+    "page_content": "Model: cloglog\nClass: spglm.links.cloglog\nType: generalized_linear_model\n\nDocumentation:\nThe CLogLog transform link function.\n\nNotes\n-----\ng(`p`) = log(-log(1-`p`))\n\ncloglog is an alias for CLogLog\ncloglog = CLogLog()",
+    "metadata": {
+      "model_name": "cloglog",
+      "full_class": "spglm.links.cloglog",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 128
+    }
+  },
+  {
+    "page_content": "Model: identity\nClass: spglm.links.identity\nType: generalized_linear_model\n\nDocumentation:\nThe identity transform\n\nNotes\n-----\ng(`p`) = `p`\n\nAlias of statsmodels.family.links.Power(power=1.)",
+    "metadata": {
+      "model_name": "identity",
+      "full_class": "spglm.links.identity",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 99
+    }
+  },
+  {
+    "page_content": "Model: inverse_power\nClass: spglm.links.inverse_power\nType: generalized_linear_model\n\nDocumentation:\nThe inverse transform\n\nNotes\n-----\ng(p) = 1/p\n\nAlias of statsmodels.family.links.Power(power=-1.)",
+    "metadata": {
+      "model_name": "inverse_power",
+      "full_class": "spglm.links.inverse_power",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 97
+    }
+  },
+  {
+    "page_content": "Model: inverse_squared\nClass: spglm.links.inverse_squared\nType: generalized_linear_model\n\nDocumentation:\nThe inverse squared transform\n\nNotes\n-----\ng(`p`) = 1/(`p`\\ \\*\\*2)\n\nAlias of statsmodels.family.links.Power(power=2.)",
+    "metadata": {
+      "model_name": "inverse_squared",
+      "full_class": "spglm.links.inverse_squared",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 117
+    }
+  },
+  {
+    "page_content": "Model: log\nClass: spglm.links.log\nType: generalized_linear_model\n\nDocumentation:\nThe log transform\n\nNotes\n-----\nlog is a an alias of Log.",
+    "metadata": {
+      "model_name": "log",
+      "full_class": "spglm.links.log",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 56
+    }
+  },
+  {
+    "page_content": "Model: logit\nClass: spglm.links.logit\nType: generalized_linear_model\n\nDocumentation:\nThe logit transform\n\nNotes\n-----\ncall and derivative use a private method _clean to make trim p by\nmachine epsilon so that p is in (0,1)\n\nAlias of Logit:\nlogit = Logit()",
+    "metadata": {
+      "model_name": "logit",
+      "full_class": "spglm.links.logit",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 169
+    }
+  },
+  {
+    "page_content": "Model: nbinom\nClass: spglm.links.nbinom\nType: generalized_linear_model\n\nDocumentation:\nThe negative binomial link function.\n\nNotes\n-----\ng(p) = log(p/(p + 1/alpha))\n\nnbinom is an alias of NegativeBinomial.\nnbinom = NegativeBinomial(alpha=1.)",
+    "metadata": {
+      "model_name": "nbinom",
+      "full_class": "spglm.links.nbinom",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 154
+    }
+  },
+  {
+    "page_content": "Model: probit\nClass: spglm.links.probit\nType: generalized_linear_model\n\nDocumentation:\nThe probit (standard normal CDF) transform\n\nNotes\n--------\ng(p) = scipy.stats.norm.ppf(p)\n\nprobit is an alias of CDFLink.",
+    "metadata": {
+      "model_name": "probit",
+      "full_class": "spglm.links.probit",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 121
+    }
+  },
+  {
+    "page_content": "Model: sqrt\nClass: spglm.links.sqrt\nType: generalized_linear_model\n\nDocumentation:\nThe square-root transform\n\nNotes\n-----\ng(`p`) = sqrt(`p`)\n\nAlias of statsmodels.family.links.Power(power=.5)",
+    "metadata": {
+      "model_name": "sqrt",
+      "full_class": "spglm.links.sqrt",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.links",
+      "doc_length": 108
+    }
+  },
+  {
+    "page_content": "Model: Binomial\nClass: spglm.family.Binomial\nType: generalized_linear_model\n\nDocumentation:\nBinomial exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Binomial family is the logit link.\n    Available links are logit, probit, cauchy, log, and cloglog.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nBinomial.link : a link instance\n    The link function of the Binomial instance\nBinomial.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Binomial",
+      "full_class": "spglm.family.Binomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 420
+    }
+  },
+  {
+    "page_content": "Model: GLM\nClass: spglm.glm.GLM\nType: generalized_linear_model\n\nDocumentation:\nGeneralised linear models. Can currently estimate Guassian, Poisson and\nLogisitc regression coefficients. GLM object prepares model input and fit\nmethod performs estimation which then returns a GLMResults object.\n\nParameters\n----------\n    y             : array\n                    n*1, dependent variable.\n    X             : array\n                    n*k, independent variable, exlcuding the constant.\n    family        : string\n                    Model type: 'Gaussian', 'Poisson', 'Binomial'\n    offset        : array\n                    n*1, the offset variable at the ith location. For Poisson model\n                    this term is often the size of the population at risk or\n                    the expected size of the outcome in spatial epidemiology.\n                    Default is None where Ni becomes 1.0 for all locations.\n    y_fix         : array\n                    n*1, the fix intercept value of y\n\nAttributes\n----------\n    y             : array\n                    n*1, dependent variable.\n    X             : array\n                    n*k, independent variable, including constant.\n    family        : string\n                    Model type: 'Gaussian', 'Poisson', 'logistic'\n    n             : integer\n                    Number of observations\n    k             : integer\n                    Number of independent variables\n    df_model      : float\n                    k-1, where k is the number of variables (including\n                    intercept)\n    df_residual   : float\n                    observations minus variables (n-k)\n    mean_y        : float\n                    Mean of y\n    std_y         : float\n                    Standard deviation of y\n    fit_params     : dict\n                    Parameters passed into fit method to define estimation\n                    routine.\n\nExamples\n--------\n>>> import libpysal\n>>> from spglm.glm import GLM\n>>> from spglm import family\n>>> db = libpysal.io.open(libpysal.examples.get_path('columbus.dbf'),'r')\n>>> y = np.arr",
+    "metadata": {
+      "model_name": "GLM",
+      "full_class": "spglm.glm.GLM",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.glm",
+      "doc_length": 2289
+    }
+  },
+  {
+    "page_content": "Model: Gaussian\nClass: spglm.family.Gaussian\nType: generalized_linear_model\n\nDocumentation:\nGaussian exponential family distribution.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Gaussian family is the identity link.\n    Available links are log, identity, and inverse.\n    See statsmodels.family.links for more information.\n\nAttributes\n----------\nGaussian.link : a link instance\n    The link function of the Gaussian instance\nGaussian.variance : varfunc instance",
+    "metadata": {
+      "model_name": "Gaussian",
+      "full_class": "spglm.family.Gaussian",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 410
+    }
+  },
+  {
+    "page_content": "Model: Poisson\nClass: spglm.family.Poisson\nType: generalized_linear_model\n\nDocumentation:\nPoisson exponential family.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Poisson family is the log link. Available\n    links are log, identity, and sqrt. See statsmodels.family.links for\n    more information.\n\nAttributes\n----------\nPoisson.link : a link instance\n    The link function of the Poisson instance.\nPoisson.variance : varfuncs instance",
+    "metadata": {
+      "model_name": "Poisson",
+      "full_class": "spglm.family.Poisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 386
+    }
+  },
+  {
+    "page_content": "Model: QuasiPoisson\nClass: spglm.family.QuasiPoisson\nType: generalized_linear_model\n\nDocumentation:\nQuasiPoisson exponential family.\n\nParameters\n----------\nlink : a link instance, optional\n    The default link for the Poisson family is the log link. Available\n    links are log, identity, and sqrt. See statsmodels.family.links for\n    more information.\n\nAttributes\n----------\nPoisson.link : a link instance\n    The link function of the Poisson instance.\nPoisson.variance : varfuncs instance",
+    "metadata": {
+      "model_name": "QuasiPoisson",
+      "full_class": "spglm.family.QuasiPoisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.family",
+      "doc_length": 391
+    }
+  },
+  {
+    "page_content": "Model: TestBinomial\nClass: spglm.tests.test_glm.TestBinomial\nType: generalized_linear_model\n\nDocumentation:\n",
+    "metadata": {
+      "model_name": "TestBinomial",
+      "full_class": "spglm.tests.test_glm.TestBinomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.tests.test_glm",
+      "doc_length": 0
+    }
+  },
+  {
+    "page_content": "Model: TestGaussian\nClass: spglm.tests.test_glm.TestGaussian\nType: generalized_linear_model\n\nDocumentation:\nTests for Poisson GLM",
+    "metadata": {
+      "model_name": "TestGaussian",
+      "full_class": "spglm.tests.test_glm.TestGaussian",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.tests.test_glm",
+      "doc_length": 21
+    }
+  },
+  {
+    "page_content": "Model: TestPoisson\nClass: spglm.tests.test_glm.TestPoisson\nType: generalized_linear_model\n\nDocumentation:\n",
+    "metadata": {
+      "model_name": "TestPoisson",
+      "full_class": "spglm.tests.test_glm.TestPoisson",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.tests.test_glm",
+      "doc_length": 0
+    }
+  },
+  {
+    "page_content": "Model: CacheWriteWarning\nClass: spglm.utils.CacheWriteWarning\nType: generalized_linear_model\n\nDocumentation:\nBase class for warnings generated by user code.",
+    "metadata": {
+      "model_name": "CacheWriteWarning",
+      "full_class": "spglm.utils.CacheWriteWarning",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.utils",
+      "doc_length": 47
+    }
+  },
+  {
+    "page_content": "Model: CachedAttribute\nClass: spglm.utils.CachedAttribute\nType: generalized_linear_model\n\nDocumentation:\n",
+    "metadata": {
+      "model_name": "CachedAttribute",
+      "full_class": "spglm.utils.CachedAttribute",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.utils",
+      "doc_length": 0
+    }
+  },
+  {
+    "page_content": "Model: ResettableCache\nClass: spglm.utils.ResettableCache\nType: generalized_linear_model\n\nDocumentation:\nDictionary whose elements mey depend one from another.\nIf entry `B` depends on entry `A`, changing the values of entry `A` will\nreset the value of entry `B` to a default (None); deleteing entry `A` will\ndelete entry `B`.  The connections between entries are stored in a\n`_resetdict` private attribute.\nParameters\n----------\nreset : dictionary, optional\n    An optional dictionary, associated a sequence of entries to any key\n    of the object.\nitems : var, optional\n    An optional dictionary used to initialize the dictionary",
+    "metadata": {
+      "model_name": "ResettableCache",
+      "full_class": "spglm.utils.ResettableCache",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.utils",
+      "doc_length": 526
+    }
+  },
+  {
+    "page_content": "Model: resettable_cache\nClass: spglm.utils.resettable_cache\nType: generalized_linear_model\n\nDocumentation:\nDictionary whose elements mey depend one from another.\nIf entry `B` depends on entry `A`, changing the values of entry `A` will\nreset the value of entry `B` to a default (None); deleteing entry `A` will\ndelete entry `B`.  The connections between entries are stored in a\n`_resetdict` private attribute.\nParameters\n----------\nreset : dictionary, optional\n    An optional dictionary, associated a sequence of entries to any key\n    of the object.\nitems : var, optional\n    An optional dictionary used to initialize the dictionary",
+    "metadata": {
+      "model_name": "resettable_cache",
+      "full_class": "spglm.utils.resettable_cache",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.utils",
+      "doc_length": 526
+    }
+  },
+  {
+    "page_content": "Model: Binomial\nClass: spglm.varfuncs.Binomial\nType: generalized_linear_model\n\nDocumentation:\nBinomial variance function\n\nParameters\n----------\nn : int, optional\n    The number of trials for a binomial variable.  The default is 1 for\n    p in (0,1)\n\nMethods\n-------\ncall\n    Returns the binomial variance\n\nFormulas\n--------\nV(mu) = p * (1 - p) * n\n\nwhere p = mu / n\n\nNotes\n-----\nAlias for Binomial:\nbinary = Binomial()\n\nA private method _clean trims the data by machine epsilon so that p is\nin (0,1)",
+    "metadata": {
+      "model_name": "Binomial",
+      "full_class": "spglm.varfuncs.Binomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.varfuncs",
+      "doc_length": 405
+    }
+  },
+  {
+    "page_content": "Model: NegativeBinomial\nClass: spglm.varfuncs.NegativeBinomial\nType: generalized_linear_model\n\nDocumentation:\nNegative binomial variance function\n\nParameters\n----------\nalpha : float\n    The ancillary parameter for the negative binomial variance function.\n    `alpha` is assumed to be nonstochastic.  The default is 1.\n\nMethods\n-------\ncall\n    Returns the negative binomial variance\n\nFormulas\n--------\nV(mu) = mu + alpha*mu**2\n\nNotes\n-----\nAlias for NegativeBinomial:\nnbinom = NegativeBinomial()\n\nA private method _clean trims the data by machine epsilon so that p is\nin (0,inf)",
+    "metadata": {
+      "model_name": "NegativeBinomial",
+      "full_class": "spglm.varfuncs.NegativeBinomial",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.varfuncs",
+      "doc_length": 469
+    }
+  },
+  {
+    "page_content": "Model: Power\nClass: spglm.varfuncs.Power\nType: generalized_linear_model\n\nDocumentation:\nPower variance function\n\nParameters\n----------\npower : float\n    exponent used in power variance function\n\nMethods\n-------\ncall\n    Returns the power variance\n\nFormulas\n--------\nV(mu) = numpy.fabs(mu)**power\n\nNotes\n-----\nAliases for Power:\nmu = Power()\nmu_squared = Power(power=2)\nmu_cubed = Power(power=3)",
+    "metadata": {
+      "model_name": "Power",
+      "full_class": "spglm.varfuncs.Power",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.varfuncs",
+      "doc_length": 306
+    }
+  },
+  {
+    "page_content": "Model: VarianceFunction\nClass: spglm.varfuncs.VarianceFunction\nType: generalized_linear_model\n\nDocumentation:\nRelates the variance of a random variable to its mean. Defaults to 1.\n\nMethods\n-------\ncall\n    Returns an array of ones that is the same shape as `mu`\n\nNotes\n-----\nAfter a variance function is initialized, its call method can be used.\n\nAlias for VarianceFunction:\nconstant = VarianceFunction()\n\nSee also\n--------\nstatsmodels.family.family",
+    "metadata": {
+      "model_name": "VarianceFunction",
+      "full_class": "spglm.varfuncs.VarianceFunction",
+      "type": "generalized_linear_model",
+      "source": "pysal_spglm",
+      "module": "spglm.varfuncs",
+      "doc_length": 339
+    }
+  }
+]

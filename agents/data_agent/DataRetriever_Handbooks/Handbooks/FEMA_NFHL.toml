@@ -1,0 +1,134 @@
+# The ID of the data source is the name of this file: FEMA_NFHL.toml
+
+# Data source name. Should be clear, meaningful, and human readable.
+data_source_name = 'FEMA National Flood Hazard Layer (NFHL)'
+
+# provide a brief description (1 line) of the data source to inform AI whether need to use this data source.
+# Need to contain critical information such as extent and period.
+brief_description = '''
+FEMA National Flood Hazard Layer (NFHL) provides the official US regulatory flood map data via ArcGIS REST API: flood hazard zones (100-year / 1% annual chance Special Flood Hazard Areas such as A, AE, AH, AO, V, VE; 0.2% annual chance zone X; etc.), base flood elevations, FIRM panels, levees, and related effective floodplain features. No API key required. Coverage is the United States and territories, but ONLY where effective digital flood maps (DFIRMs) exist — unmapped communities return no features. It reflects the current effective maps, not a historical time series.
+'''
+
+handbook = '''
+No API key is required. All services are freely and publicly accessible via HTTPS.
+The ArcGIS REST MapServer root is: https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer
+This service is NATIONAL and extremely large. NEVER query with where=1=1 over the whole service — you MUST constrain every query by a geographic extent (a bounding box / envelope). Querying without a spatial filter will time out or be rejected.
+You will receive a place name or a WGS84 bounding box of the target area. If given a place name, look up its bounding box from OpenStreetMap; do not guess lat/lon yourself since we need accurate results. To get the bounding box: `gdf = ox.geocode_to_gdf(place_name); west, south, east, north = gdf.unary_union.bounds`.
+The most commonly needed layer is Layer 28 — Flood Hazard Zones (polygon, the regulatory flood zones). Other useful layers: 16 Base Flood Elevations (line), 27 Flood Hazard Boundaries (line), 3 FIRM Panels (polygon), 32 Water Areas, 23 Levees, 1 LOMRs, 34 LOMAs, 22 Political Jurisdictions. To list all layers, append ?f=json to the MapServer URL.
+ALWAYS fetch the layer metadata first at {MapServer_URL}/{layerID}?f=json to confirm exact field names before writing any filter — never assume field names.
+Layer 28 (Flood Hazard Zones) confirmed key fields: FLD_ZONE (string, e.g. 'AE', 'A', 'AO', 'AH', 'VE', 'X', 'D'), ZONE_SUBTY (string subtype, e.g. '0.2 PCT ANNUAL CHANCE FLOOD HAZARD', 'FLOODWAY'), SFHA_TF (string 'T'/'F' — whether it is a Special Flood Hazard Area), STATIC_BFE (double, base flood elevation; -9999 means not applicable), DEPTH (double).
+Flood zone meanings: A, AE, AH, AO, AR, A99, V, VE are Special Flood Hazard Areas (1% annual chance / 100-year floodplain, mandatory insurance). Zone X with ZONE_SUBTY '0.2 PCT ANNUAL CHANCE FLOOD HAZARD' is the 500-year / moderate-risk area. Plain Zone X is minimal risk. Zone D is undetermined. Use SFHA_TF='T' to select only the regulatory high-risk floodplain.
+The query endpoint is: {MapServer_URL}/{layerID}/query . Use a spatial query with these params: geometry as a comma string "west,south,east,north", geometryType='esriGeometryEnvelope', inSR=4326, spatialRel='esriSpatialRelIntersects', outFields='*', returnGeometry='true', outSR=4326, f='geojson'.
+Request f='geojson'. Do NOT read the response with `gpd.read_file(io.StringIO(...))` — reading GeoJSON from an in-memory buffer goes through GDAL's GeoJSON driver and fails on some geopandas/GDAL versions with "Failed to read GeoJSON data". Instead parse the JSON yourself and build the GeoDataFrame from the features: `payload = resp.json(); page = gpd.GeoDataFrame.from_features(payload['features'], crs='EPSG:4326')`. This is engine-independent and also gives clean column names (no 'attributes.' prefix). Build requests with `requests.get(url, params=...)`; never concatenate URLs by hand.
+Before parsing features, check for an ArcGIS error object: if `resp.json()` is a dict containing an 'error' key, raise it with the message and the request URL so the real cause is visible — do not let it surface as an opaque GeoJSON read failure.
+PAGINATION — do NOT use resultOffset/resultRecordCount paging on this service. The service maxRecordCount is 2000, but deep resultOffset paging returns HTTP 500 on this server (e.g. resultOffset=4000 fails even though tens of thousands of features exist). Use OBJECTID-based batching instead, which is reliable:
+  Step A — fetch ALL matching object IDs in ONE request: same spatial query params plus returnIdsOnly=true and f=json. This is NOT subject to maxRecordCount and returns every id. Read objectIdFieldName (usually 'OBJECTID') and the objectIds list from the response.
+  Step B — fetch features in batches of the ids (use 1000 ids per batch). For each batch, query with params objectIds="id1,id2,..." (comma-joined), outFields='*', returnGeometry='true', outSR=4326, f='geojson'. The objectIds already encode the spatial filter, so do NOT also send the geometry/geometryType params in Step B.
+  Use POST for the Step B feature requests (`requests.post(query_url, data=params)`): a batch of 1000 ids is too long for a GET URL and will fail with 414/500. Concatenate the GeoJSON features from every batch.
+If returnIdsOnly returns no ids (empty or missing objectIds list), treat it as the valid 'no data' / unmapped case described below.
+The service native spatial reference is EPSG:4269 (NAD83). Always pass inSR=4326 and outSR=4326 so input and output are WGS84; reproject afterward only if a projected CRS is needed for area calculations.
+An EMPTY result is a valid, expected outcome: it means the area is not mapped in the NFHL or contains no features of that layer. Do NOT treat zero features as an error, but DO print a clear message so the user knows the area may be unmapped.
+Save vector output as GeoPackage (.gpkg) by default (or GeoJSON if requested). Use geopandas for all geometry handling; avoid `osgeo`/GDAL bindings.
+Put your reply into a Python code block. Explanation or conversation can be Python comments at the beginning of the code block (enclosed by ```python and ```).
+The download code is only in a function named 'download_data()'. The last line is to execute this function; do not use `if __name__ == '__main__':`.
+DO NOT silently handle exceptions; we need the error information for debugging. (The only soft case is an empty feature set, described above, which is not an exception.)
+To explore the service interactively in a browser, open (remove ?f=json for the readable HTML page):
+  All layers:  https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer
+  Fields/caps: https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28
+  Query tester: https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query
+Reference example (verified pipeline): {code_example}
+'''
+
+code_example = '''
+# Example: download FEMA NFHL Flood Hazard Zones (Layer 28) for a place and save as GeoPackage.
+import requests
+import osmnx as ox
+import geopandas as gpd
+import pandas as pd
+
+def download_data():
+    place_name = "Cape Coral, Florida, USA"
+
+    # --- Step 1: place name -> WGS84 bounding box from OpenStreetMap ---
+    gdf_place = ox.geocode_to_gdf(place_name)
+    west, south, east, north = gdf_place.unary_union.bounds
+
+    base_url = "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer"
+    layer_id = 28  # Flood Hazard Zones
+    query_url = f"{base_url}/{layer_id}/query"
+
+    # --- Step 2: confirm field names from layer metadata ---
+    meta = requests.get(f"{base_url}/{layer_id}", params={"f": "json"})
+    meta.raise_for_status()
+    field_names = [f["name"] for f in meta.json().get("fields", [])]
+    print("Available fields:", field_names)
+
+    # --- Step 3a: get ALL matching OBJECTIDs in one request (not capped by
+    # maxRecordCount). Do NOT use resultOffset paging on this service: deep
+    # offsets (e.g. 4000) return HTTP 500. ---
+    id_params = {
+        "geometry": f"{west},{south},{east},{north}",
+        "geometryType": "esriGeometryEnvelope",
+        "inSR": 4326,
+        "spatialRel": "esriSpatialRelIntersects",
+        "returnIdsOnly": "true",
+        "f": "json",
+    }
+    id_resp = requests.get(query_url, params=id_params, timeout=300)
+    id_resp.raise_for_status()
+    id_payload = id_resp.json()
+    if isinstance(id_payload, dict) and id_payload.get("error"):
+        raise RuntimeError(f"FEMA NFHL id query error from {id_resp.url}: {id_payload['error']}")
+
+    oid_field = id_payload.get("objectIdFieldName", "OBJECTID")
+    all_ids = id_payload.get("objectIds") or []
+    print(f"Matching {oid_field}s in bbox: {len(all_ids)}")
+
+    # --- Step 3b: fetch features in batches BY OBJECTID via POST (a batch of
+    # 1000 ids is too long for a GET URL). objectIds already encode the spatial
+    # filter, so geometry params are not resent. ---
+    frames = []
+    batch_size = 1000
+    for i in range(0, len(all_ids), batch_size):
+        chunk = all_ids[i:i + batch_size]
+        feat_params = {
+            "objectIds": ",".join(str(x) for x in chunk),
+            "outFields": "*",
+            "returnGeometry": "true",
+            "outSR": 4326,
+            "f": "geojson",
+        }
+        resp = requests.post(query_url, data=feat_params, timeout=300)
+        resp.raise_for_status()
+
+        # Parse JSON ourselves (engine-independent) instead of gpd.read_file(io.StringIO()),
+        # which fails on some GDAL versions with "Failed to read GeoJSON data".
+        payload = resp.json()
+        if isinstance(payload, dict) and payload.get("error"):
+            raise RuntimeError(f"FEMA NFHL feature query error from {resp.url}: {payload['error']}")
+
+        feats = payload.get("features", [])
+        if feats:
+            frames.append(gpd.GeoDataFrame.from_features(feats, crs="EPSG:4326"))
+        print(f"Fetched {sum(len(f) for f in frames)} / {len(all_ids)} features so far...")
+
+    # --- Step 4: handle the valid 'no data' case ---
+    if not frames:
+        print(f"No NFHL flood hazard zones found for '{place_name}'. "
+              f"The area may not be mapped in the NFHL.")
+        return
+
+    gdf = gpd.GeoDataFrame(pd.concat(frames, ignore_index=True), crs="EPSG:4326")
+    print(f"Total flood-zone polygons: {len(gdf)}")
+    if "FLD_ZONE" in gdf.columns:
+        print("Flood zones present:", sorted(gdf["FLD_ZONE"].dropna().unique().tolist()))
+
+    # --- Step 5: save ---
+    output_file = "FEMA_NFHL_FloodZones_CapeCoral.gpkg"
+    gdf.to_file(output_file, layer="flood_hazard_zones", driver="GPKG")
+
+download_data()
+'''
+
+# Official website of the data source (shown in the Web UI).
+website = 'https://www.fema.gov/flood-maps/national-flood-hazard-layer'

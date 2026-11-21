@@ -1,0 +1,216 @@
+# Shared spatial knowledge base.
+#
+# Every experimental condition (B1 prompting, B2 retrieval, B3 skill rules, P)
+# receives exactly this content; only the delivery mechanism differs. Edit the
+# content here, never in a renderer, or the comparison stops isolating the
+# integration mechanism. Each run records a fingerprint of this file.
+#
+# Entry schema (validated by agents/spatial_reasoning/knowledge_base.py):
+#   id               unique slug
+#   concept          scale | dependence | heterogeneity
+#   assumption_field the structured-assumption field this entry informs
+#                    (scale_and_zoning | independence | global_or_local)
+#   title            short name
+#   condition        when the entry applies
+#   implication      why it matters for inference
+#   diagnostic       name + procedure: the evidence that settles it
+#   response         what to do if the diagnostic detects / does not detect it
+
+version: 2
+scope: >
+  Areal, regression-style inquiry: an outcome and one or more covariates
+  measured on areal units (e.g. tracts, counties, neighborhoods).
+
+entries:
+
+  - id: maup_aggregation
+    concept: scale
+    assumption_field: scale_and_zoning
+    title: Modifiable areal unit problem
+    condition: >
+      The outcome or covariates are aggregated to areal units such as tracts,
+      counties or neighborhoods.
+    implication: >
+      The estimated association can change with the size of the units (scale
+      effect) and with how unit boundaries are drawn (zoning effect), so a
+      result found at one unit definition may not hold at another.
+    diagnostic:
+      name: aggregation sensitivity
+      procedure: >
+        Re-estimate the same model at at least one alternative aggregation
+        (coarser units, or an alternative zoning of the same area) and compare
+        the sign, magnitude and confidence interval of the key coefficients.
+    response:
+      if_detected: >
+        Report the result as scale-sensitive, present the estimates at each
+        aggregation, and restrict conclusions to the unit definition analyzed.
+      if_not_detected: >
+        State that the key coefficients were stable across the aggregations
+        tested.
+
+  - id: ecological_inference
+    concept: scale
+    assumption_field: scale_and_zoning
+    title: Ecological fallacy
+    condition: >
+      The hypothesis or conclusion is about individuals (people, households,
+      parcels) but the data are areal aggregates.
+    implication: >
+      Associations between area-level averages need not hold for the
+      individuals inside those areas.
+    diagnostic:
+      name: unit-of-inference check
+      procedure: >
+        Compare the unit named in the hypothesis with the unit of the data
+        before analysis.
+    response:
+      if_detected: >
+        Restate the hypothesis and conclusions at the areal level of the data.
+      if_not_detected: >
+        No change; the hypothesis and data share the same unit.
+
+  - id: scale_mismatch
+    concept: scale
+    assumption_field: scale_and_zoning
+    title: Mismatched resolutions
+    condition: >
+      Variables are measured on different units or resolutions, or the data
+      resolution differs from the scale the research question implies.
+    implication: >
+      Combining them requires aggregation or disaggregation, which introduces
+      error and can create spurious or masked associations.
+    diagnostic:
+      name: resolution audit
+      procedure: >
+        List the native unit of every variable and the unit implied by the
+        question, and identify the coarsest common unit.
+    response:
+      if_detected: >
+        Aggregate to the coarsest common unit with a stated rule (e.g.
+        population-weighted mean), do not disaggregate without a model, and
+        record the mismatch as a limitation.
+      if_not_detected: >
+        No change; all variables share the analysis unit.
+
+  - id: residual_dependence
+    concept: dependence
+    assumption_field: independence
+    title: Spatially dependent residuals
+    condition: >
+      Observations are areal units, where neighboring units are likely to be
+      similar in the outcome or in unmeasured factors.
+    implication: >
+      If residuals are spatially autocorrelated, ordinary least squares
+      standard errors are too small and significance is overstated; the
+      pattern may also signal an omitted spatially structured variable.
+    diagnostic:
+      name: residual Moran's I and LISA
+      procedure: >
+        Fit the non-spatial model, compute global Moran's I on its residuals
+        with a stated weights matrix (e.g. queen contiguity, row-standardized)
+        using permutation inference, and use LISA to locate residual clusters.
+    response:
+      if_detected: >
+        Do not rely on OLS inference. Use Lagrange multiplier tests to choose a
+        spatial lag or spatial error specification and report it alongside OLS.
+      if_not_detected: >
+        OLS inference is acceptable for the weights tested; report the test
+        result rather than adding a spatial model.
+
+  - id: lag_versus_error
+    concept: dependence
+    assumption_field: independence
+    title: Choosing a spatial lag or spatial error model
+    condition: >
+      Residual spatial dependence has been detected in a non-spatial model.
+    implication: >
+      A spatial lag model treats dependence as substantive spillover in the
+      outcome; a spatial error model treats it as a nuisance in unmeasured
+      factors. Lag coefficients are not marginal effects.
+    diagnostic:
+      name: robust Lagrange multiplier tests
+      procedure: >
+        Compute robust LM-lag and robust LM-error statistics on the OLS model
+        with the same weights matrix.
+    response:
+      if_detected: >
+        Choose the specification whose robust test is significant (the larger
+        if both are); for a lag model report direct, indirect and total impacts
+        rather than raw coefficients.
+      if_not_detected: >
+        If neither robust test is significant, report OLS with the residual
+        dependence result as a limitation.
+
+  - id: weights_sensitivity
+    concept: dependence
+    assumption_field: independence
+    title: Sensitivity to the spatial weights matrix
+    condition: >
+      A spatial weights matrix is used for a dependence test or a spatial
+      model.
+    implication: >
+      Test results and spatial model estimates depend on the neighbor
+      definition chosen.
+    diagnostic:
+      name: alternative weights
+      procedure: >
+        Repeat the residual Moran's I test with at least one alternative
+        weights definition (e.g. k-nearest neighbors).
+    response:
+      if_detected: >
+        Report results under each weights definition and qualify conclusions
+        that change.
+      if_not_detected: >
+        State that the dependence conclusion was robust to the weights tested.
+
+  - id: spatial_nonstationarity
+    concept: heterogeneity
+    assumption_field: global_or_local
+    title: Spatially varying relationships
+    condition: >
+      Theory gives a defensible reason to expect the relationship to differ
+      across places, or residual clusters persist after accounting for
+      dependence.
+    implication: >
+      A single global coefficient averages over local effects and can hide
+      places where the relationship is weaker, stronger or reversed.
+    diagnostic:
+      name: MGWR bandwidths and local-coefficient variability
+      procedure: >
+        Fit multiscale geographically weighted regression (MGWR) on
+        standardized variables and compare each covariate's bandwidth with the
+        number of units: a bandwidth close to the number of units indicates a
+        global relationship. Compare AICc with the global model. Treat apparent
+        local variation as inconclusive when residual spatial dependence is
+        also present, because the two can be confused.
+    response:
+      if_detected: >
+        Report and map local coefficients only for covariates with small
+        bandwidths and significant variability; keep the others global. Check
+        residual Moran's I after the local model.
+      if_not_detected: >
+        Keep the global model and report that the relationship did not vary
+        detectably across the study area.
+
+  - id: unwarranted_local_model
+    concept: heterogeneity
+    assumption_field: global_or_local
+    title: Applying a local model without evidence
+    condition: >
+      The data are spatial but there is no theoretical reason or diagnostic
+      evidence that the relationship varies across places.
+    implication: >
+      GWR and MGWR fit to a stationary process produce spurious apparent
+      variation, are vulnerable to local collinearity, and add complexity that
+      the data do not support.
+    diagnostic:
+      name: MGWR bandwidths and local-coefficient variability
+      procedure: >
+        Use the same bandwidth and variability evidence as for spatially
+        varying relationships before choosing a local model.
+    response:
+      if_detected: >
+        Use the local model, justified by the diagnostic evidence.
+      if_not_detected: >
+        Do not use GWR or MGWR merely because the data are spatial; report the
+        global model.

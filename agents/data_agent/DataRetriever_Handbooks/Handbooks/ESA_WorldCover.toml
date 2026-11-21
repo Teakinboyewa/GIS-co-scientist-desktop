@@ -1,0 +1,117 @@
+# The ID of the data source is the name of this file: ESA_WorldCover.toml
+
+# Data source name. Should be clear, meaningful, and human readable.
+data_source_name = 'ESA WorldCover'
+
+# provide a brief description (1 line) of the data source to inform AI whether need to use this data source.
+# Need to contain critical information such as extent and period.
+brief_description = '''
+ESA WorldCover is a global land cover / land use map at 10m resolution derived from Sentinel-1 and Sentinel-2, with 11 classes (tree cover, shrubland, grassland, cropland, built-up, bare/sparse vegetation, snow and ice, permanent water bodies, herbaceous wetland, mangroves, moss and lichen). Two global epochs are available: 2020 (v100) and 2021 (v200). Use it to answer "what is on the ground" questions; it is not a time series and not for sub-10m or change-detection analysis.
+'''
+
+# Put the technical requirements or details for the data source. One line for a requirement. No need to number them.
+handbook = '''
+ESA WorldCover does NOT provide a query/REST API and does NOT require an API key or authentication. Data is distributed as static GeoTIFF tiles in a public AWS S3 open-data bucket that you download over HTTPS.
+The global map is tiled into 3 degree x 3 degree GeoTIFFs, each named by the latitude/longitude of its SOUTH-WEST corner snapped to a 3 degree grid. Tile code format is `{NS}{lat:02d}{EW}{lon:03d}`, e.g. `N51W003`, `S06W078`. Latitude is `N`/`S` zero-padded to 2 digits; longitude is `E`/`W` zero-padded to 3 digits.
+The download URL pattern is: `https://esa-worldcover.s3.eu-central-1.amazonaws.com/{version}/{year}/map/ESA_WorldCover_10m_{year}_{version}_{tile}_Map.tif`. Valid (version, year) pairs are: `v100`/`2020` and `v200`/`2021`. Default to the latest, `v200`/`2021`, unless the user asks for 2020.
+There are two epochs only (2020 and 2021). If the user requests any other year, pick the nearest available epoch and note it in a comment; do not fabricate other years.
+Pixel values are class codes (NOT continuous): 10 Tree cover, 20 Shrubland, 30 Grassland, 40 Cropland, 50 Built-up, 60 Bare / sparse vegetation, 70 Snow and ice, 80 Permanent water bodies, 90 Herbaceous wetland, 95 Mangroves, 100 Moss and lichen. The raster is single-band uint8; nodata is 0. Treat it as categorical (e.g. nearest-neighbor when resampling, never average).
+Data is in EPSG:4326 (WGS84 geographic coordinates) at 10m (approximately 0.0000833 degrees) resolution. Reproject after download if you need a projected CRS for area calculations.
+You will receive a place name or a WGS84 bounding box of the target area. If given a place name, look up its bounding box from OpenStreetMap; do not guess lat/lon yourself since we need accurate results. To get the bounding box: `gdf = ox.geocode_to_gdf(place_name); west, south, east, north = gdf.unary_union.bounds`.
+Determine which 3 degree tiles intersect the bounding box: the south-west corner of each tile is `tile_lat = floor(lat / 3) * 3` and `tile_lon = floor(lon / 3) * 3`. Iterate over every tile corner from `floor(south/3)*3` to `floor(north/3)*3` and `floor(west/3)*3` to `floor(east/3)*3` in steps of 3.
+Ocean-only areas have no tile: a tile URL that returns HTTP 404 means there is no land there and should be skipped, NOT treated as an error. Raise an error only if a non-404 HTTP error occurs, or if NO tiles at all were found for the requested area.
+Download the intersecting tiles, mosaic them with `rasterio.merge`, and clip to the requested bounding box (pass `bounds=(west, south, east, north)` to `rasterio.merge.merge`). Use `rasterio` (not `osgeo`/GDAL bindings) for raster handling; it tends to be more reliable here.
+Save the output as a single GeoTIFF (.tif). Preserve the class codes and set nodata to 0.
+You need to create Python code to download and save the data. Another program will execute your code directly.
+Put your reply into a Python code block; any explanation should be Python comments at the top of the code block (enclosed by ```python and ```).
+The download code must be in a function named `download_data()`. The last line is to execute this function; do not use `if __name__ == '__main__':`.
+DO NOT silently handle exceptions (other than the 404-skip described above) since we need the error information for debugging.
+Reference example (verified pipeline): {code_example}
+'''
+
+# The following code example replaces the placeholder "{code_example}" in the handbook.
+code_example = '''
+# Example: download ESA WorldCover 2021 (v200) 10m land cover for a place and save as a clipped GeoTIFF.
+import os
+import math
+import tempfile
+import requests
+import osmnx as ox
+import rasterio
+from rasterio.merge import merge
+
+def download_data():
+    place_name = "Luxembourg"
+
+    # Get the WGS84 bounding box for the place name from OpenStreetMap.
+    gdf = ox.geocode_to_gdf(place_name)
+    west, south, east, north = gdf.unary_union.bounds
+
+    # Choose epoch: v200/2021 (latest) or v100/2020.
+    version, year = "v200", "2021"
+    base_url = f"https://esa-worldcover.s3.eu-central-1.amazonaws.com/{version}/{year}/map"
+
+    def tile_code(tile_lat, tile_lon):
+        ns = "N" if tile_lat >= 0 else "S"
+        ew = "E" if tile_lon >= 0 else "W"
+        return f"{ns}{abs(tile_lat):02d}{ew}{abs(tile_lon):03d}"
+
+    # 3-degree tile grid: snap bbox corners down to multiples of 3.
+    lat_start = int(math.floor(south / 3.0) * 3)
+    lat_end = int(math.floor(north / 3.0) * 3)
+    lon_start = int(math.floor(west / 3.0) * 3)
+    lon_end = int(math.floor(east / 3.0) * 3)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        local_tiles = []
+        for tile_lat in range(lat_start, lat_end + 1, 3):
+            for tile_lon in range(lon_start, lon_end + 1, 3):
+                code = tile_code(tile_lat, tile_lon)
+                url = f"{base_url}/ESA_WorldCover_10m_{year}_{version}_{code}_Map.tif"
+                resp = requests.get(url, timeout=300)
+
+                # Ocean-only tiles do not exist -> 404 is expected, skip them.
+                if resp.status_code == 404:
+                    continue
+                resp.raise_for_status()
+
+                tile_path = os.path.join(tmpdir, f"{code}.tif")
+                with open(tile_path, "wb") as fh:
+                    fh.write(resp.content)
+                local_tiles.append(tile_path)
+
+        if not local_tiles:
+            raise RuntimeError(
+                f"No ESA WorldCover land tiles found for bounding box "
+                f"({west}, {south}, {east}, {north}); the area may be ocean-only."
+            )
+
+        # Mosaic the tiles and clip to the requested bounding box in one step.
+        srcs = [rasterio.open(p) for p in local_tiles]
+        try:
+            mosaic, out_transform = merge(srcs, bounds=(west, south, east, north))
+            profile = srcs[0].profile.copy()
+        finally:
+            for s in srcs:
+                s.close()
+
+        profile.update(
+            driver="GTiff",
+            height=mosaic.shape[1],
+            width=mosaic.shape[2],
+            transform=out_transform,
+            count=mosaic.shape[0],
+            dtype=mosaic.dtype,
+            nodata=0,
+            compress="deflate",
+        )
+
+        output_file = "ESA_WorldCover_2021_Luxembourg.tif"
+        with rasterio.open(output_file, "w", **profile) as dst:
+            dst.write(mosaic)
+
+download_data()
+'''
+
+# Official website of the data source (shown in the Web UI).
+website = 'https://esa-worldcover.org/'

@@ -1,0 +1,91 @@
+# The ID of the data source is the name of this file: NASA_FIRMS.toml
+
+# Data source name. Should be clear, meaningful, and human readable.
+data_source_name = 'NASA FIRMS (Active Fire / Thermal Hotspots)'
+
+# provide a brief description (1 line) of the data source to inform AI whether need to use this data source.
+# Need to contain critical information such as extent and period.
+brief_description = '''
+NASA FIRMS (Fire Information for Resource Management System) provides global satellite-detected ACTIVE FIRE / thermal hotspot points (latitude, longitude, acquisition date/time, brightness temperature, Fire Radiative Power (FRP), detection confidence, day/night). Sensors: MODIS (1km, since ~2000), VIIRS (375m, since ~2012), and Landsat. Available as near-real-time (NRT, within ~3 hours of overpass, roughly the last ~2 months) and quality-controlled standard-processing (SP, the longer historical archive). NOTE: these are thermal detections at the moment of satellite overpass, NOT mapped burned-area / fire scars — for burn extent/severity use a burned-area product instead. Requires a free FIRMS MAP_KEY.
+'''
+
+handbook = '''
+The NASA FIRMS MAP_KEY is: {NASA_FIRMS_key}
+Get a free MAP_KEY at https://firms.modaps.eosdis.nasa.gov/api/map_key/ . All requests are HTTPS. Rate limit: 5000 transactions per 10-minute interval (a single area request can consume several transactions), so add a short time.sleep() between many requests.
+The primary endpoint is the AREA CSV API: https://firms.modaps.eosdis.nasa.gov/api/area/csv/{MAP_KEY}/{SOURCE}/{AREA_COORDINATES}/{DAY_RANGE}/{DATE}
+  - {MAP_KEY}: the key above.
+  - {SOURCE}: one of LANDSAT_NRT, MODIS_NRT, MODIS_SP, VIIRS_NOAA20_NRT, VIIRS_NOAA20_SP, VIIRS_NOAA21_NRT, VIIRS_SNPP_NRT, VIIRS_SNPP_SP. Default to VIIRS_SNPP_NRT (375m) for recent fires. Use *_SP (standard processing) for older dates outside the NRT window, and MODIS_* if a long historical record (back to ~2000) is needed.
+  - {AREA_COORDINATES}: a comma string "west,south,east,north" in WGS84 lon/lat (same order as OSMnx bounds). Use "world" only if a global pull is explicitly requested.
+  - {DAY_RANGE}: integer number of days, MINIMUM 1, MAXIMUM 5 per request. Requests for more than 5 days MUST be split into consecutive <=5-day windows.
+  - {DATE}: optional start date as YYYY-MM-DD; the request returns DAY_RANGE days of data starting at that date. OMIT {DATE} entirely (and the trailing slash) to get the most recent DAY_RANGE days.
+You will receive a place name or a WGS84 bounding box. If given a place name, look up its bounding box from OpenStreetMap; do not guess lat/lon yourself. To get the bounding box: `gdf = ox.geocode_to_gdf(place_name); west, south, east, north = gdf.unary_union.bounds`.
+Choose NRT vs SP by date: NRT covers roughly the last ~2 months through now; for earlier dates use the matching *_SP source. If unsure what dates a source covers, check the data-availability endpoint first: https://firms.modaps.eosdis.nasa.gov/api/data_availability/csv/{MAP_KEY}/ALL (or .../{SOURCE}).
+For a multi-day or date-range request longer than 5 days, loop: start at the begin date, request DAY_RANGE=min(5, days_left), then advance the start date by that many days until the end date is reached; concatenate all rows. Respect the 5000/10-min rate limit with a small sleep between calls.
+The response is CSV text. Read it with pandas: `df = pd.read_csv(io.StringIO(resp.text))` (CSV via pandas is safe; this is NOT the geopandas/GeoJSON case). VIIRS columns include: latitude, longitude, bright_ti4, scan, track, acq_date, acq_time, satellite, instrument, confidence, version, bright_ti5, frp, daynight. MODIS columns include: latitude, longitude, brightness, scan, track, acq_date, acq_time, satellite, instrument, confidence, version, bright_t31, frp, daynight. Confidence is 'l'/'n'/'h' for VIIRS but 0-100 for MODIS — do not assume one scheme.
+ERROR / EMPTY handling: an invalid key or bad request returns a short text message (often starting with 'Invalid' and NOT containing the 'latitude' header) — detect this and raise it with resp.text so the real cause is visible. A valid query over an area with no fires returns the header row with zero data rows; treat that as a valid 'no active fires detected' result (print a clear message), not an error.
+Build the request URL with the path components above (the MAP_KEY/SOURCE/etc. are PATH segments, not query params). Always call resp.raise_for_status().
+Output: build a point GeoDataFrame from the longitude/latitude columns in EPSG:4326 and save as GeoPackage (.gpkg) by default; also acceptable to save the raw CSV if the user asks for a table. Add a column with the requested place name (or bbox) for provenance. Use geopandas/pandas; avoid `osgeo`.
+Put your reply into a Python code block. Explanation or conversation can be Python comments at the beginning of the code block (enclosed by ```python and ```).
+The download code is only in a function named 'download_data()'. The last line is to execute this function; do not use `if __name__ == '__main__':`.
+DO NOT silently handle exceptions; we need the error information for debugging. (The only soft case is the valid 'no active fires' empty result described above.)
+Reference example (verified pipeline): {code_example}
+'''
+
+code_example = '''
+# Example: download VIIRS (S-NPP) active fire detections for the last 5 days over a place,
+# and save as a point GeoPackage.
+import io
+import requests
+import osmnx as ox
+import pandas as pd
+import geopandas as gpd
+
+def download_data():
+    place_name = "Athens, Greece"
+    source = "VIIRS_SNPP_NRT"   # 375m near-real-time; use *_SP for older dates, MODIS_* for long history
+    day_range = 5               # 1..5 per request; split longer periods into <=5-day windows
+    map_key = "{NASA_FIRMS_key}"
+
+    # --- Step 1: place name -> WGS84 bbox (west,south,east,north) from OpenStreetMap ---
+    gdf_place = ox.geocode_to_gdf(place_name)
+    west, south, east, north = gdf_place.unary_union.bounds
+    area = f"{west},{south},{east},{north}"
+
+    # --- Step 2: build the AREA CSV request (most recent day_range days; omit date) ---
+    url = (
+        "https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
+        f"{map_key}/{source}/{area}/{day_range}"
+    )
+    resp = requests.get(url, timeout=300)
+    resp.raise_for_status()
+
+    text = resp.text
+    # An invalid key / bad request returns a short message without the CSV header.
+    if "latitude" not in text.splitlines()[0].lower():
+        raise RuntimeError(f"FIRMS request did not return CSV. Server said: {text[:500]}")
+
+    df = pd.read_csv(io.StringIO(text))
+
+    # --- Step 3: valid 'no fires' case ---
+    if df.empty:
+        print(f"No active fire detections for '{place_name}' "
+              f"({source}, last {day_range} days).")
+        return
+
+    df["query_place"] = place_name
+    print(f"Detections: {len(df)} | columns: {list(df.columns)}")
+
+    # --- Step 4: build point GeoDataFrame and save ---
+    gdf = gpd.GeoDataFrame(
+        df,
+        geometry=gpd.points_from_xy(df["longitude"], df["latitude"]),
+        crs="EPSG:4326",
+    )
+    output_file = "NASA_FIRMS_VIIRS_Athens.gpkg"
+    gdf.to_file(output_file, layer="active_fires", driver="GPKG")
+
+download_data()
+'''
+
+# Official website of the data source (shown in the Web UI).
+website = 'https://firms.modaps.eosdis.nasa.gov/'
