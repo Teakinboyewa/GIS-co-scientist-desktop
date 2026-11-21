@@ -37,6 +37,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.request
 from pathlib import Path
 
@@ -187,8 +188,28 @@ def make_dmg(bundle: Path, out: Path, work: Path) -> None:
     (src / "Applications").symlink_to("/Applications")
     if out.exists():
         out.unlink()
-    run(["hdiutil", "create", "-volname", APP_NAME, "-srcfolder", src,
-         "-ov", "-format", "UDZO", out])
+    # ULMO = LZMA-compressed (macOS 10.15+; the app needs 11+). Much smaller
+    # than UDZO's zlib for this many Python files.
+    cmd = ["hdiutil", "create", "-volname", APP_NAME, "-srcfolder", src,
+           "-ov", "-format", "ULMO", out]
+    # "hdiutil: create failed - Resource busy" happens now and then (macOS is
+    # still scanning the freshly written files, notably on GitHub's runners);
+    # waiting and trying again clears it.
+    for attempt in range(1, 6):
+        print("+", " ".join(str(c) for c in cmd), flush=True)
+        r = subprocess.run([str(c) for c in cmd], capture_output=True, text=True)
+        sys.stdout.write(r.stdout)
+        sys.stderr.write(r.stderr)
+        if r.returncode == 0:
+            return
+        busy = "Resource busy" in (r.stdout + r.stderr)
+        if not busy or attempt == 5:
+            raise subprocess.CalledProcessError(r.returncode, cmd, r.stdout, r.stderr)
+        wait = 10 * attempt
+        print(f"hdiutil was busy (attempt {attempt}/5); trying again in {wait} s", flush=True)
+        if out.exists():
+            out.unlink()
+        time.sleep(wait)
 
 
 def main() -> None:
