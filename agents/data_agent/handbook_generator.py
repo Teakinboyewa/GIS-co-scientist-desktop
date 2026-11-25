@@ -1221,7 +1221,7 @@ def generate_handbook(query, website="", doc_urls=None, user_key=None,
         if not key:
             raise ValueError(
                 "Generating a handbook with Claude requires an Anthropic "
-                "API key. Enter one in Settings, or set ANTHROPIC_API_KEY "
+                "API key. Enter one in Handbook Studio, or set ANTHROPIC_API_KEY "
                 "on the server.")
         model = model or CLAUDE_HANDBOOK_MODEL
     else:

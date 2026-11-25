@@ -184,7 +184,7 @@ def run_agent(prompt, *, system_prompt=None, tools=None, cwd=None,
     if not key:
         raise RuntimeError(
             "Generating with Claude requires an Anthropic API key. Enter "
-            "one in Settings, or set ANTHROPIC_API_KEY on the server.")
+            "one in Handbook Studio, or set ANTHROPIC_API_KEY on the server.")
 
     from claude_agent_sdk import (
         AssistantMessage, ClaudeAgentOptions, ResultMessage, TextBlock,
