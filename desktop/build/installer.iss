@@ -5,7 +5,7 @@
 
 #define AppName "GIS Co-Scientist"
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.1.2"
 #endif
 #ifndef StageDir
   #define StageDir "..\..\build\stage"

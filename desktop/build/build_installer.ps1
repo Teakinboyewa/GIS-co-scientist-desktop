@@ -1,9 +1,9 @@
 # Builds dist\GIS-CoScientist-Setup-<version>.exe
 #   1. stages a self-contained Python + app into build\stage (stage_app.py)
 #   2. compiles desktop\build\installer.iss with the portable Inno Setup in desktop\tools
-# Usage: powershell -ExecutionPolicy Bypass -File desktop\build\build_installer.ps1 [-Version 0.1.0] [-SkipStage]
+# Usage: powershell -ExecutionPolicy Bypass -File desktop\build\build_installer.ps1 [-Version 0.1.2] [-SkipStage]
 param(
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.1.2",
     [string]$Venv = "$env:USERPROFILE\venvs\agm_venv",
     [switch]$SkipStage
 )

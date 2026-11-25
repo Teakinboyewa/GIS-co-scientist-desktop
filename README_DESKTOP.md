@@ -89,7 +89,7 @@ installed app never runs it.
 **Use the build script, which runs both steps** (from this folder, in PowerShell):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File desktop\build\build_installer.ps1 -Version 0.1.1
+powershell -ExecutionPolicy Bypass -File desktop\build\build_installer.ps1 -Version 0.1.2
 ```
 
 Add `-SkipStage` to reuse an existing `build\stage`. Don't run `ISCC.exe` directly on this
@@ -99,7 +99,7 @@ specified". The script maps the folder to a temporary short drive letter (`subst
 through it, then removes it. To do that by hand:
 
 ```powershell
-subst G: "$PWD"; & "G:\desktop\tools\innosetup-6.7.3\tools\ISCC.exe" /DAppVersion=0.1.1 /Q "G:\desktop\build\installer.iss"; subst G: /D
+subst G: "$PWD"; & "G:\desktop\tools\innosetup-6.7.3\tools\ISCC.exe" /DAppVersion=0.1.2 /Q "G:\desktop\build\installer.iss"; subst G: /D
 ```
 
 Use a new `-Version` for each build you hand out, so installing it over an older copy upgrades it.
@@ -123,7 +123,7 @@ screen. Optional extras such as `TAVILY_API_KEY` or `AGM_CITATION_MAILTO` go in
 Run workflow**, enter the version. It builds on GitHub's Mac machines for Apple Silicon
 and Intel (`.github/workflows/build-mac.yml`), checks that the bundled Python loads the
 app, and attaches the two .dmg files to the run under **Artifacts**. Pushing a tag such as
-`v0.1.1` runs it too.
+`v0.1.2` runs it too.
 
 **On a Mac yourself:**
 Not built or tested on a Mac yet. The Python runtime and its compiled packages must
@@ -131,7 +131,7 @@ be the macOS builds, so this has to run on macOS (your own Mac, or a cloud Mac s
 GitHub Actions macOS runner). From this folder on the Mac:
 
 ```bash
-python3 desktop/build/build_mac.py --version 0.1.1 \
+python3 desktop/build/build_mac.py --version 0.1.2 \
     --python-tarball <cpython-3.13.N+DATE-aarch64-apple-darwin-install_only.tar.gz>
 ```
 
