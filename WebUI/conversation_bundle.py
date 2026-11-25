@@ -17,6 +17,8 @@ task id (Outputs/<conversation-id>/...), and message metadata and saved
 workflow state refer to it, so a new id would break every output link. The
 importer becomes the owner. Absolute paths that point into the sender's app
 folder are rewritten to the recipient's.
+
+API keys are removed from the bundle (see export_redaction.py).
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ import zipfile
 from datetime import datetime, timezone
 
 from WebUI import conversation_db as cdb
+from WebUI.export_redaction import TEXT_EXTS, Redactor, collect_secrets
 
 BUNDLE_FORMAT = "gis-coscientist-conversation"
 BUNDLE_VERSION = 1
@@ -94,7 +97,7 @@ def _sha256_file(path):
     return h.hexdigest()
 
 
-def _add_tree(zf, src_dir, arc_prefix):
+def _add_tree(zf, src_dir, arc_prefix, redactor, known_only=False):
     """Add every file under src_dir to the zip at arc_prefix/<relative path>.
     Returns (file count, total bytes)."""
     count = size = 0
@@ -105,7 +108,12 @@ def _add_tree(zf, src_dir, arc_prefix):
             rel = os.path.relpath(path, src_dir).replace(os.sep, "/")
             ext = os.path.splitext(name)[1].lower()
             compress = zipfile.ZIP_STORED if ext in _STORED_EXTS else zipfile.ZIP_DEFLATED
-            zf.write(path, f"{arc_prefix}/{rel}", compress_type=compress)
+            if ext in TEXT_EXTS:
+                with open(path, "rb") as f:
+                    content = redactor.file(name, f.read(), known_only)
+                zf.writestr(f"{arc_prefix}/{rel}", content, compress_type=compress)
+            else:
+                zf.write(path, f"{arc_prefix}/{rel}", compress_type=compress)
             count += 1
             size += os.path.getsize(path)
     return count, size
@@ -114,8 +122,11 @@ def _add_tree(zf, src_dir, arc_prefix):
 # ── Export ────────────────────────────────────────────────────────────
 
 
-def export_conversation(conversation_id, dest_path, app_root=None):
-    """Write the conversation's bundle to dest_path. Returns a summary dict."""
+def export_conversation(conversation_id, dest_path, app_root=None, saved_keys=None):
+    """Write the conversation's bundle to dest_path. Returns a summary dict.
+
+    saved_keys: the API keys saved in Settings, removed wherever they appear.
+    """
     app_root = os.path.abspath(app_root or default_app_root())
     conn = cdb._get_connection()
     try:
@@ -155,6 +166,8 @@ def export_conversation(conversation_id, dest_path, app_root=None):
         f.pop("id", None)
         f.pop("conversation_id", None)
 
+    redactor = Redactor(collect_secrets(
+        app_root, [os.path.join(_outputs_dir(app_root), t) for t in task_ids], saved_keys))
     uploads = _uploads_dir(app_root, conversation_id)
     blobs = []
     with zipfile.ZipFile(dest_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
@@ -173,19 +186,19 @@ def export_conversation(conversation_id, dest_path, app_root=None):
                 entry["source"] = "uploads"
             else:
                 entry["source"] = f"blobs/{i}.bin"
-                zf.writestr(entry["source"], content)
+                zf.writestr(entry["source"], redactor.file(b["filename"], content, known_only=True))
             blobs.append(entry)
 
         upload_count, upload_bytes = (0, 0)
         if os.path.isdir(uploads):
-            upload_count, upload_bytes = _add_tree(zf, uploads, "uploads")
+            upload_count, upload_bytes = _add_tree(zf, uploads, "uploads", redactor, known_only=True)
 
         output_count = output_bytes = 0
         included_tasks = []
         for tid in task_ids:
             tdir = os.path.join(_outputs_dir(app_root), tid)
             if os.path.isdir(tdir):
-                c, s = _add_tree(zf, tdir, f"outputs/{tid}")
+                c, s = _add_tree(zf, tdir, f"outputs/{tid}", redactor)
                 output_count += c
                 output_bytes += s
                 included_tasks.append(tid)
@@ -193,10 +206,10 @@ def export_conversation(conversation_id, dest_path, app_root=None):
         conversation = {k: convo.get(k) for k in
                         ("id", "title", "created_at", "updated_at", "task_id", "mode")}
         zf.writestr("conversation.json", json.dumps({
-            "conversation": conversation,
-            "messages": messages,
-            "files": files,
-            "artifacts": artifacts,
+            "conversation": redactor.value(conversation),
+            "messages": redactor.value(messages),
+            "files": redactor.value(files),
+            "artifacts": redactor.value(artifacts),
             "blobs": blobs,
         }, ensure_ascii=False, default=str))
         manifest = {
@@ -204,7 +217,7 @@ def export_conversation(conversation_id, dest_path, app_root=None):
             "version": BUNDLE_VERSION,
             "exported_at": datetime.now(timezone.utc).isoformat(),
             "conversation_id": conversation_id,
-            "title": convo.get("title"),
+            "title": redactor.text(convo.get("title")),
             "task_ids": included_tasks,
             "app_root": app_root,
             "counts": {

@@ -29,9 +29,12 @@ Send a file instead:
   conversation keeps its id, and paths into the sender's app folder are rewritten to yours.
   An API key must be saved in Settings first. Importing a conversation that is already in
   the sidebar opens it instead; importing one you deleted brings it back as it was in the file.
-- The file contains everything in the conversation, including the absolute folder paths
+- API keys are removed from the file (`WebUI/export_redaction.py`); your own copy is not changed.
+  Code that had a key in it shows `REMOVED_API_KEY`, so the recipient needs their own key to re-run it.
+- The file contains everything else in the conversation, including the absolute folder paths
   in saved workflow state, so check it before sending it outside your group.
-- Code: `WebUI/conversation_bundle.py`; tests: `tests/test_conversation_bundle.py`.
+- Code: `WebUI/conversation_bundle.py`; tests: `tests/test_conversation_bundle.py`,
+  `tests/test_export_redaction.py`.
 
 ## Deleting a conversation
 Deleting (as the owner) removes the conversation for good: its database rows, stored file

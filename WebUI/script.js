@@ -11383,6 +11383,12 @@ async function _exportConversation(convo) {
     try {
         const resp = await fetch(`${API_BASE_URL}/api/conversations/${convo.id}/export`, {
             method: 'POST',
+            // Saved keys, so the server can remove them from the file.
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ saved_keys: {
+                ...getSavedDataSourceKeys(),
+                _anthropic: localStorage.getItem('agm_anthropic_api_key') || '',
+            } }),
         });
         let data = {};
         try { data = await resp.json(); } catch (_) { /* non-JSON error page */ }

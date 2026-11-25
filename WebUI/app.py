@@ -7901,7 +7901,10 @@ def export_conversation_endpoint(conversation_id):
     work_dir = tempfile.mkdtemp(prefix='gcs_export_')
     path = os.path.join(work_dir, 'conversation.zip')
     try:
-        summary = export_conversation(conversation_id, path)
+        # The keys saved in Settings, so they can be removed from the file.
+        saved_keys = {'request': g.api_key,
+                      'saved': (request.get_json(silent=True) or {}).get('saved_keys')}
+        summary = export_conversation(conversation_id, path, saved_keys=saved_keys)
     except BundleError as e:
         shutil.rmtree(work_dir, ignore_errors=True)
         return jsonify({'error': str(e)}), 400

@@ -1118,11 +1118,17 @@ def _build_step_summaries(ctx):
     return summaries
 
 
+# Context entries that must never reach disk. Keys are sent again by the browser
+# with each Proceed click, so a resumed run does not need a saved copy.
+_UNSAVED_STATE_KEYS = frozenset({"_data_source_keys"})
+
+
 def _serialize_state(state):
     """Serialize state for JSON storage, handling non-serializable objects."""
     def convert(obj):
         if isinstance(obj, dict):
-            return {key: convert(value) for key, value in obj.items()}
+            return {key: convert(value) for key, value in obj.items()
+                    if key not in _UNSAVED_STATE_KEYS}
         elif isinstance(obj, list):
             return [convert(item) for item in obj]
         elif isinstance(obj, (np.integer, np.int64, np.int32)):
